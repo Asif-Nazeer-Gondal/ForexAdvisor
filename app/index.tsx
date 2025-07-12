@@ -1,8 +1,9 @@
-// app/index.tsx
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import ForexRateCard from '../components/ForexRateCard';
-import { fetchUSDtoPKR } from '../services/forexService';
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator } from 'react-native-paper';
+import { fetchUSDtoPKR } from '../services/forexService'; // removed .js
+import ForexRateCard from '../components/ForexRateCard';   // ensure .tsx exists
 
 export default function HomeScreen() {
   const [rate, setRate] = useState<number | null>(null);
@@ -12,7 +13,7 @@ export default function HomeScreen() {
   useEffect(() => {
     fetchUSDtoPKR()
       .then(setRate)
-      .catch((err) => setError(err.message))
+      .catch((err: any) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 

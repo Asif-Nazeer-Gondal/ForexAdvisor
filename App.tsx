@@ -1,8 +1,8 @@
 // App.tsx
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
-import HomeScreen from './app/index'; // ✅ this renders your HomeScreen correctly
+import * as React from 'react';
+import HomeScreen from './app/index.js'; // ✅ this renders your HomeScreen correctly
 
 const Stack = createNativeStackNavigator();
 

@@ -1,12 +1,23 @@
 {
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "allowJs": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",                // ✅ Use this for Expo
+    "baseUrl": ".",                                // ✅ Enables path aliasing
+    "paths": {
+      "@/*": ["./*"]                               // ✅ @ -> project root
+    },
+    "allowImportingTsExtensions": true,           // ✅ So .ts/.tsx extensions work
     "jsx": "react-native",
-    "moduleResolution": "node",
+    "lib": ["DOM", "ESNext"],
+    "esModuleInterop": true,
+    "allowJs": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "noEmit": true,
     "strict": true,
-    "target": "ESNext",
-    "module": "ESNext"
-  }
+    "skipLibCheck": true
+  },
+  "exclude": ["node_modules"]
 }
