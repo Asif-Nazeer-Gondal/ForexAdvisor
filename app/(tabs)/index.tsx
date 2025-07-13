@@ -1,10 +1,11 @@
+// app/index.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Button } from 'react-native';
 import { fetchForexRate } from '../../services/forexService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 
-const HomeScreen = () => {
+const HomeScreen: React.FC = () => {
   const [rate, setRate] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -12,12 +13,12 @@ const HomeScreen = () => {
   useEffect(() => {
     const loadRate = async () => {
       try {
-        const cachedRate = await AsyncStorage.getItem('cachedRate');
-        if (cachedRate) setRate(parseFloat(cachedRate));
+        const cached = await AsyncStorage.getItem('cachedRate');
+        if (cached) setRate(parseFloat(cached));
 
-        const latestRate = await fetchForexRate();
-        setRate(latestRate);
-        await AsyncStorage.setItem('cachedRate', latestRate.toString());
+        const latest = await fetchForexRate();
+        setRate(latest);
+        await AsyncStorage.setItem('cachedRate', latest.toString());
       } catch (err) {
         console.error('Error loading forex rate:', err);
       } finally {
