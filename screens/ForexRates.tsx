@@ -1,19 +1,20 @@
 // screens/ForexRates.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { fetchForexRate } from '../services/forexService';
 
 const ForexRates: React.FC = () => {
   const [rate, setRate] = useState<number | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const getRate = async () => {
       try {
-        const forexRate = await fetchForexRate('USD', 'PKR');
-        setRate(forexRate);
-      } catch {
-        setRate(null);
+        const result = await fetchForexRate();
+        setRate(result);
+      } catch (err) {
+        setError('Unable to fetch forex rate');
       } finally {
         setLoading(false);
       }
@@ -24,13 +25,13 @@ const ForexRates: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>💱 USD to PKR</Text>
+      <Text style={styles.title}>💱 Live Forex Rate</Text>
       {loading ? (
-        <ActivityIndicator size="large" color="#000" />
-      ) : rate !== null ? (
-        <Text style={styles.rate}>{`1 USD = ${rate.toFixed(2)} PKR`}</Text>
+        <ActivityIndicator size="large" color="#007AFF" />
+      ) : error ? (
+        <Text style={styles.error}>{error}</Text>
       ) : (
-        <Text style={styles.error}>Failed to load rate.</Text>
+        <Text style={styles.rate}>1 USD = {rate?.toFixed(2)} PKR</Text>
       )}
     </View>
   );
@@ -40,20 +41,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: 24,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
+    fontWeight: 'bold',
   },
   rate: {
     fontSize: 22,
     textAlign: 'center',
+    color: 'green',
   },
   error: {
-    fontSize: 18,
     color: 'red',
     textAlign: 'center',
   },
