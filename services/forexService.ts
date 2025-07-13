@@ -1,11 +1,16 @@
 // services/forexService.ts
-export const fetchForexRate = async (): Promise<number> => {
+export const fetchForexRate = async (base: string, target: string): Promise<number> => {
   try {
-    const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    const response = await fetch(`https://api.exchangerate.host/latest?base=${base}&symbols=${target}`);
     const data = await response.json();
-    return data.rates.PKR;
+
+    if (data?.rates?.[target]) {
+      return data.rates[target];
+    } else {
+      throw new Error('Invalid currency response');
+    }
   } catch (error) {
     console.error('Error fetching forex rate:', error);
-    throw new Error('Failed to fetch forex rate');
+    return 0; // safe fallback
   }
 };
