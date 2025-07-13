@@ -3,12 +3,13 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "bundler",                // ✅ Use this for Expo
-    "baseUrl": ".",                                // ✅ Enables path aliasing
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]                               // ✅ @ -> project root
+      "@env": ["env.d.ts"],
+      "@/*": ["./*"]
     },
-    "allowImportingTsExtensions": true,           // ✅ So .ts/.tsx extensions work
+    "allowImportingTsExtensions": true,
     "jsx": "react-native",
     "lib": ["DOM", "ESNext"],
     "esModuleInterop": true,
