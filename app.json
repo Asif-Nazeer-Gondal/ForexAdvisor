@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "ForexAdvisor",
+    "slug": "ForexAdvisor",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "forexadvisor",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+  [
+    "expo-splash-screen",
+    {
+      "image": "./assets/images/splash-icon.png",
+      "imageWidth": 200,
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    }
+  ]
+],
+
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "TWELVE_DATA_API_KEY": "199ed11bb87946a1a4f308c1f54e20ca",
+      "EXCHANGE_RATE_API_KEY": "06efe0dc7c3325d213613a1d",
+      "CURRENCY_API_KEY": "cur_live_iGeRHeLLv8RuZuCyoZd4J8daxS24N2FjA9UXyr1v"
+    }
+  }
+}
