@@ -1,5 +1,7 @@
+// types/navigation.ts
 export type RootStackParamList = {
   Home: undefined;
-  BudgetCalculator: undefined;
-  ForexRates: undefined;
+  Budget: undefined;
+  Predictor: undefined;
+  Settings: undefined;
 };
