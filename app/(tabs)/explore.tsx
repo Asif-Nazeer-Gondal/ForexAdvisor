@@ -1,112 +1,173 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+const TIPS = [
+  {
+    icon: 'trending-up',
+    color: '#4CAF50',
+    title: 'Invest Consistently',
+    desc: 'Regular investments, even small, can grow significantly over time.'
+  },
+  {
+    icon: 'pie-chart',
+    color: '#2196F3',
+    title: 'Diversify Portfolio',
+    desc: 'Don’t put all your eggs in one basket. Spread your investments.'
+  },
+  {
+    icon: 'alarm',
+    color: '#FF9800',
+    title: 'Set Reminders',
+    desc: 'Review your investments and budget regularly for best results.'
+  },
+];
 
-export default function TabTwoScreen() {
+const RESOURCES = [
+  {
+    icon: 'book',
+    color: '#9C27B0',
+    title: 'Forex Trading Basics',
+    url: 'https://www.investopedia.com/forex-trading-4427702',
+  },
+  {
+    icon: 'youtube-play',
+    color: '#F44336',
+    title: 'Forex Explained (YouTube)',
+    url: 'https://www.youtube.com/results?search_query=forex+trading+for+beginners',
+  },
+  {
+    icon: 'globe',
+    color: '#009688',
+    title: 'XE Currency Tools',
+    url: 'https://www.xe.com/tools/',
+  },
+];
+
+const FEATURED = {
+  title: 'Featured: How to Start Investing in Forex',
+  desc: 'A step-by-step beginner’s guide to understanding forex markets, choosing brokers, and making your first trade.',
+  url: 'https://www.investopedia.com/articles/forex/11/why-trade-forex.asp',
+};
+
+export default function ExploreTab() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron-right"
-
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <ScrollView style={{ flex: 1, backgroundColor: '#f6f8fa' }} contentContainerStyle={styles.container}>
+      <View style={styles.featuredCard}>
+        <Text style={styles.featuredTitle}>{FEATURED.title}</Text>
+        <Text style={styles.featuredDesc}>{FEATURED.desc}</Text>
+        <TouchableOpacity onPress={() => Linking.openURL(FEATURED.url)} style={styles.featuredButton}>
+          <Text style={styles.featuredButtonText}>Read Article</Text>
+          <MaterialIcons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 6 }} />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Investment Tips</Text>
+        {TIPS.map(tip => (
+          <View key={tip.title} style={styles.tipRow}>
+            <MaterialIcons name={tip.icon as any} size={22} color={tip.color} style={{ marginRight: 10 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.tipTitle}>{tip.title}</Text>
+              <Text style={styles.tipDesc}>{tip.desc}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Educational Resources</Text>
+        {RESOURCES.map(res => (
+          <TouchableOpacity key={res.title} style={styles.resourceRow} onPress={() => Linking.openURL(res.url)}>
+            <FontAwesome5 name={res.icon as any} size={20} color={res.color} style={{ marginRight: 10 }} />
+            <Text style={styles.resourceTitle}>{res.title}</Text>
+            <MaterialIcons name="open-in-new" size={16} color="#888" style={{ marginLeft: 6 }} />
+          </TouchableOpacity>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    backgroundColor: '#fff',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    padding: 18,
+    paddingBottom: 32,
   },
-  titleContainer: {
+  featuredCard: {
+    backgroundColor: '#007AFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 22,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.09,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  featuredTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  featuredDesc: {
+    color: '#e3f0ff',
+    fontSize: 15,
+    marginBottom: 14,
+  },
+  featuredButton: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    backgroundColor: '#005ecb',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignSelf: 'flex-start',
+  },
+  featuredButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  sectionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 5,
+    elevation: 1,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#007AFF',
+  },
+  tipRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 14,
+  },
+  tipTitle: {
+    fontWeight: 'bold',
+    fontSize: 15,
+    marginBottom: 2,
+    color: '#222',
+  },
+  tipDesc: {
+    color: '#555',
+    fontSize: 14,
+  },
+  resourceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  resourceTitle: {
+    fontSize: 15,
+    color: '#007AFF',
+    fontWeight: 'bold',
+    flex: 1,
   },
 });

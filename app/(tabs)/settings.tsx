@@ -1,9 +1,5 @@
-import { View, Text } from 'react-native';
+import SettingsScreen from '../../screens/SettingsScreen';
 
-export default function SettingsScreen() {
-  return (
-    <View style={{ padding: 20 }}>
-      <Text>⚙️ Settings Screen</Text>
-    </View>
-  );
+export default function SettingsTab() {
+  return <SettingsScreen />;
 }
