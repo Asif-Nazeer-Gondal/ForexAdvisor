@@ -1,6 +1,6 @@
 // File: hooks/useForex.ts
 import { useEffect, useState } from 'react';
-import { fetchForexRate } from '../services/forexService';
+import fetchUSDtoPKR from '@/services/forexService';
 
 export const useForex = () => {
   const [rate, setRate] = useState<number | null>(null);
@@ -9,10 +9,10 @@ export const useForex = () => {
   useEffect(() => {
     const getRate = async () => {
       try {
-        const r = await fetchForexRate();
+        const r = await fetchUSDtoPKR();
         setRate(r);
       } catch (e) {
-        console.error(e);
+        console.error('Failed to fetch USD to PKR rate:', e);
       } finally {
         setLoading(false);
       }
