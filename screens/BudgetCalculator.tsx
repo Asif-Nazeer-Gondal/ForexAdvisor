@@ -1,148 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, Button, KeyboardAvoidingView, Platform } from 'react-native';
+// screens/BudgetCalculator.tsx
+
+import React, { useState, useEffect } from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface BudgetData {
-  income: string;
-  expenses: string;
-  savings: string;
-  investment: string;
-}
-
 const BudgetCalculator: React.FC = () => {
-  const [data, setData] = useState<BudgetData>({
-    income: '',
-    expenses: '',
-    savings: '',
-    investment: '',
-  });
+  const [income, setIncome] = useState<string>('');
+  const [expenses, setExpenses] = useState<string>('');
+  const [savings, setSavings] = useState<number | null>(null);
 
-  const [balance, setBalance] = useState<number>(0);
+  const calculateSavings = () => {
+    const incomeVal = parseFloat(income);
+    const expenseVal = parseFloat(expenses);
 
-  const STORAGE_KEY = 'budget_data';
-
-  const calculateBalance = (budget: BudgetData) => {
-    const income = parseFloat(budget.income) || 0;
-    const expenses = parseFloat(budget.expenses) || 0;
-    const savings = parseFloat(budget.savings) || 0;
-    const investment = parseFloat(budget.investment) || 0;
-    const result = income - (expenses + savings + investment);
-    setBalance(result);
-  };
-
-  const handleChange = (field: keyof BudgetData, value: string) => {
-    const updatedData = { ...data, [field]: value };
-    setData(updatedData);
-    calculateBalance(updatedData);
-  };
-
-  const saveData = async () => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (error) {
-      console.error('Error saving budget data:', error);
-    }
-  };
-
-  const loadData = async () => {
-    try {
-      const saved = await AsyncStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed: BudgetData = JSON.parse(saved);
-        setData(parsed);
-        calculateBalance(parsed);
-      }
-    } catch (error) {
-      console.error('Error loading budget data:', error);
+    if (!isNaN(incomeVal) && !isNaN(expenseVal)) {
+      const calculated = incomeVal - expenseVal;
+      setSavings(calculated);
+      AsyncStorage.setItem('savings', JSON.stringify(calculated));
     }
   };
 
   useEffect(() => {
-    loadData();
+    const loadSaved = async () => {
+      const saved = await AsyncStorage.getItem('savings');
+      if (saved) setSavings(parseFloat(saved));
+    };
+    loadSaved();
   }, []);
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.inner}>
-        <Text style={styles.title}>💸 Budget Calculator</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>💰 Budget Calculator</Text>
 
-        {['income', 'expenses', 'savings', 'investment'].map((field) => (
-          <View key={field} style={styles.inputContainer}>
-            <Text style={styles.label}>{field.toUpperCase()}</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              placeholder={`Enter ${field}`}
-              value={data[field as keyof BudgetData]}
-              onChangeText={(value) => handleChange(field as keyof BudgetData, value)}
-            />
-          </View>
-        ))}
+        <Text style={styles.label}>Monthly Income:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your income"
+          keyboardType="numeric"
+          value={income}
+          onChangeText={setIncome}
+        />
 
-        <View style={styles.resultContainer}>
-          <Text style={styles.resultLabel}>Remaining Balance</Text>
-          <Text style={[styles.balance, balance >= 0 ? styles.positive : styles.negative]}>
-            {balance.toFixed(2)} PKR
-          </Text>
-        </View>
+        <Text style={styles.label}>Monthly Expenses:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your expenses"
+          keyboardType="numeric"
+          value={expenses}
+          onChangeText={setExpenses}
+        />
 
-        <Button title="💾 Save Budget" onPress={saveData} />
+        <TouchableOpacity style={styles.button} onPress={calculateSavings}>
+          <Text style={styles.buttonText}>Calculate Savings</Text>
+        </TouchableOpacity>
+
+        {savings !== null && (
+          <Text style={styles.result}>Remaining Savings: Rs. {savings}</Text>
+        )}
       </ScrollView>
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 export default BudgetCalculator;
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#fff',
   },
-  inner: {
-    padding: 20,
-    gap: 20,
+  container: {
+    flexGrow: 1,
+    padding: 24,
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
+    marginBottom: 24,
     textAlign: 'center',
   },
-  inputContainer: {
-    marginBottom: 10,
-  },
   label: {
-    marginBottom: 4,
-    fontWeight: '600',
     fontSize: 16,
+    marginBottom: 8,
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
     padding: 12,
+    marginBottom: 16,
     fontSize: 16,
   },
-  resultContainer: {
-    marginVertical: 20,
+  button: {
+    backgroundColor: '#007AFF',
+    padding: 14,
+    borderRadius: 10,
     alignItems: 'center',
+    marginBottom: 24,
   },
-  resultLabel: {
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  result: {
     fontSize: 18,
-    fontWeight: '500',
-  },
-  balance: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginTop: 8,
-  },
-  positive: {
-    color: 'green',
-  },
-  negative: {
-    color: 'red',
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

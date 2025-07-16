@@ -1,7 +1,7 @@
 // screens/ForexRates.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { fetchForexRate } from '../services/forexService';
+import fetchUSDtoPKR from '../services/forexService';
 
 const ForexRates: React.FC = () => {
   const [rate, setRate] = useState<number | null>(null);
@@ -10,10 +10,10 @@ const ForexRates: React.FC = () => {
   useEffect(() => {
     const loadRate = async () => {
       try {
-        const fetchedRate = await fetchForexRate();
+        const fetchedRate = await fetchUSDtoPKR();
         setRate(fetchedRate);
       } catch (error) {
-        console.error(error);
+        console.error('Error fetching USD to PKR rate:', error);
       } finally {
         setLoading(false);
       }
@@ -28,7 +28,9 @@ const ForexRates: React.FC = () => {
       {loading ? (
         <ActivityIndicator size="large" />
       ) : (
-        <Text style={styles.rate}>{rate ? `1 USD = ${rate} PKR` : 'Rate not available'}</Text>
+        <Text style={styles.rate}>
+          {rate ? `1 USD = ${rate} PKR` : 'Rate not available'}
+        </Text>
       )}
     </View>
   );

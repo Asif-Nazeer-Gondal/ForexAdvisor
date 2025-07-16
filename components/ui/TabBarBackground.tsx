@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { View } from 'react-native';
 import { useColorScheme } from '../../hooks/useColorScheme.ts';
-import useBottomTabOverflow from '@/components/ui/TabBarBackground';
+
 export default function TabBarBackground() {
   const theme = useColorScheme();
 
