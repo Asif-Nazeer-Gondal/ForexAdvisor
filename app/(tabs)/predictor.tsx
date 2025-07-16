@@ -1,9 +1,5 @@
-import { View, Text } from 'react-native';
+import PredictorScreen from '../../screens/PredictorScreen';
 
-export default function PredictorScreen() {
-  return (
-    <View style={{ padding: 20 }}>
-      <Text>📈 Predictor Screen</Text>
-    </View>
-  );
+export default function PredictorTab() {
+  return <PredictorScreen />;
 }
