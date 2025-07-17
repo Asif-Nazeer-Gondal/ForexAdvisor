@@ -1,7 +1,6 @@
 // screens/HomeScreen.tsx
 
 import { MaterialIcons } from '@expo/vector-icons';
-import 'dotenv/config';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BarChart, LineChart } from 'react-native-chart-kit';

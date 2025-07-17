@@ -30,7 +30,7 @@ const RESOURCES = [
     url: 'https://www.investopedia.com/forex-trading-4427702',
   },
   {
-    icon: 'youtube-play',
+    icon: 'youtube',
     color: '#F44336',
     title: 'Forex Explained (YouTube)',
     url: 'https://www.youtube.com/results?search_query=forex+trading+for+beginners',
