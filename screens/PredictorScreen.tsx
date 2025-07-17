@@ -1,20 +1,22 @@
 // screens/PredictorScreen.tsx
-import { MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
+    Animated,
     Dimensions,
-    SafeAreaView,
     ScrollView,
-    StyleSheet,
+    StatusBar,
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { useBudget } from '../hooks/useBudget';
 import { fetchHistoricalRates } from '../services/forexService';
+import { useTheme } from '../theme/ThemeContext';
 import { getPrediction } from '../utils/predictorLogic';
 
 type MaterialIconName = React.ComponentProps<typeof MaterialIcons>["name"];
@@ -22,13 +24,14 @@ type MaterialIconName = React.ComponentProps<typeof MaterialIcons>["name"];
 const screenWidth = Dimensions.get('window').width;
 
 const PAIRS = [
-  { label: 'USD/PKR', base: 'USD', target: 'PKR' },
-  { label: 'EUR/USD', base: 'EUR', target: 'USD' },
-  { label: 'GBP/USD', base: 'GBP', target: 'USD' },
-  { label: 'USD/JPY', base: 'USD', target: 'JPY' },
+  { label: 'USD/PKR', base: 'USD', target: 'PKR', icon: 'dollar-sign' },
+  { label: 'EUR/USD', base: 'EUR', target: 'USD', icon: 'euro-sign' },
+  { label: 'GBP/USD', base: 'GBP', target: 'USD', icon: 'pound-sign' },
+  { label: 'USD/JPY', base: 'USD', target: 'JPY', icon: 'yen-sign' },
 ];
 
-const PredictorScreen: React.FC = () => {
+export default function PredictorScreen() {
+  const { theme } = useTheme();
   const [selected, setSelected] = useState(PAIRS[0]);
   const [history, setHistory] = useState<number[]>([]);
   const [labels, setLabels] = useState<string[]>([]);
@@ -38,6 +41,10 @@ const PredictorScreen: React.FC = () => {
   const { balance } = useBudget();
   const [simAmount, setSimAmount] = useState('');
   const [simResult, setSimResult] = useState<string | null>(null);
+
+  // Animation values
+  const fadeAnim = new Animated.Value(0);
+  const slideAnim = new Animated.Value(50);
 
   const loadHistory = async () => {
     setLoading(true);
@@ -59,6 +66,22 @@ const PredictorScreen: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 
+  useEffect(() => {
+    // Start animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   function getConfidence(prices: number[]): number {
     if (prices.length < 4) return 50;
     const last = prices.slice(-3).reduce((a, b) => a + b, 0) / 3;
@@ -71,16 +94,26 @@ const PredictorScreen: React.FC = () => {
   const confidence = getConfidence(history);
   let trendIcon = 'trending-flat';
   let trendColor = '#888';
-  if (prediction.includes('Uptrend')) { trendIcon = 'trending-up'; trendColor = '#4CAF50'; }
-  else if (prediction.includes('Downtrend')) { trendIcon = 'trending-down'; trendColor = '#F44336'; }
+  let trendGradient: [string, string] = ['#888', '#666'];
+  
+  if (prediction.includes('Uptrend')) { 
+    trendIcon = 'trending-up'; 
+    trendColor = '#43e97b'; 
+    trendGradient = ['#43e97b', '#38f9d7'];
+  }
+  else if (prediction.includes('Downtrend')) { 
+    trendIcon = 'trending-down'; 
+    trendColor = '#fa709a'; 
+    trendGradient = ['#fa709a', '#fee140'];
+  }
 
   function getExplanation(prices: number[]): string {
     if (prices.length < 4) return 'Not enough data for a detailed explanation.';
     const last = prices.slice(-3).reduce((a, b) => a + b, 0) / 3;
     const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
-    if (last > avg) return 'The last 3 days’ average is higher than the week’s average, indicating an uptrend.';
-    if (last < avg) return 'The last 3 days’ average is lower than the week’s average, indicating a downtrend.';
-    return 'The last 3 days’ average is about the same as the week’s average, indicating a stable trend.';
+    if (last > avg) return 'The last 3 days\' average is higher than the week\'s average, indicating an uptrend.';
+    if (last < avg) return 'The last 3 days\' average is lower than the week\'s average, indicating a downtrend.';
+    return 'The last 3 days\' average is about the same as the week\'s average, indicating a stable trend.';
   }
 
   function simulateInvestment(amount: number): string {
@@ -97,169 +130,113 @@ const PredictorScreen: React.FC = () => {
     return `Stable trend. You may invest Rs. ${(balance * 0.3).toFixed(0)}`;
   }
 
+  const handleSimulate = () => {
+    if (simAmount && !isNaN(Number(simAmount))) {
+      setSimResult(simulateInvestment(Number(simAmount)));
+    } else {
+      Alert.alert('Error', 'Please enter a valid amount.');
+    }
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f6f8fa' }}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Currency Pair</Text>
-          <View style={styles.pairRow}>
-            {PAIRS.map(pair => (
-              <TouchableOpacity
-                key={pair.label}
-                style={[styles.pairButton, selected.label === pair.label && styles.pairButtonActive]}
-                onPress={() => setSelected(pair)}
-              >
-                <Text style={selected.label === pair.label ? styles.pairButtonTextActive : styles.pairButtonText}>
-                  {pair.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+    <View className="flex-1 bg-background">
+      <StatusBar barStyle={theme.background === '#fff' ? 'dark-content' : 'light-content'} backgroundColor={theme.background} />
+      
+      {/* Header */}
+      <View className="bg-primary rounded-b-3xl px-6 py-6 mb-4 flex-row items-center justify-between">
+        <View>
+          <Text className="text-white text-lg font-mono">AI-Powered</Text>
+          <Text className="text-accent text-2xl font-bold font-mono">Forex Predictor</Text>
         </View>
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>{selected.label} (Last 7 Days)</Text>
+        <TouchableOpacity onPress={loadHistory} className="bg-accent rounded-full p-3">
+          <MaterialIcons name="refresh" size={24} color="#0A2540" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+        {/* Pair Selector */}
+        <View className="flex-row justify-between mb-4 px-2">
+          {PAIRS.map(pair => (
+            <TouchableOpacity
+              key={pair.label}
+              className={`flex-1 mx-1 px-2 py-2 rounded-lg items-center ${selected.label === pair.label ? 'bg-accent' : 'bg-white'}`}
+              onPress={() => setSelected(pair)}
+            >
+              <FontAwesome5 name={pair.icon as any} size={18} color={selected.label === pair.label ? '#0A2540' : '#1DE9B6'} />
+              <Text className={`font-mono text-xs mt-1 ${selected.label === pair.label ? 'text-primary font-bold' : 'text-primary'}`}>{pair.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Prediction Result */}
+        <View className="bg-white rounded-2xl p-4 mb-6 shadow items-center">
+          <Text className="text-primary text-lg font-bold mb-2 font-mono">Prediction</Text>
           {loading ? (
-            <ActivityIndicator size="small" color="#007AFF" />
+            <ActivityIndicator size="large" color="#1DE9B6" />
           ) : error ? (
-            <Text style={{ color: 'red' }}>{error}</Text>
+            <Text className="text-red-500 font-mono">{error}</Text>
+          ) : (
+            <>
+              <View className="flex-row items-center mb-2">
+                <MaterialIcons name={trendIcon as MaterialIconName} size={28} color={trendColor} style={{ marginRight: 8 }} />
+                <Text className="text-primary text-xl font-bold font-mono">{prediction}</Text>
+              </View>
+              <Text className="text-primary font-mono mb-1">Confidence: {confidence}%</Text>
+              <Text className="text-gray-600 font-mono mb-2 text-center">{getExplanation(history)}</Text>
+              <Text className="text-accent font-mono text-center">{getInvestmentSuggestion(prediction, balance)}</Text>
+            </>
+          )}
+        </View>
+
+        {/* Chart */}
+        <View className="bg-white rounded-2xl p-4 mb-6 shadow items-center">
+          <Text className="text-primary text-lg font-bold mb-2 font-mono">7-Day Trend</Text>
+          {loading ? (
+            <ActivityIndicator size="small" color="#1DE9B6" />
           ) : history.length > 0 ? (
             <LineChart
               data={{
                 labels,
                 datasets: [{ data: history }],
               }}
-              width={screenWidth - 48}
-              height={160}
+              width={screenWidth}
+              height={180}
               chartConfig={{
                 backgroundColor: '#fff',
                 backgroundGradientFrom: '#fff',
                 backgroundGradientTo: '#fff',
-                color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
-                propsForDots: { r: '3', strokeWidth: '2', stroke: '#007AFF' },
+                color: (opacity = 1) => `rgba(10,37,64,${opacity})`,
+                labelColor: (opacity = 1) => `rgba(29,233,182,${opacity})`,
+                propsForDots: { r: '4', strokeWidth: '2', stroke: '#1DE9B6' },
+                strokeWidth: 3,
               }}
               bezier
-              style={{ marginVertical: 8, borderRadius: 8 }}
+              style={{ borderRadius: 16 }}
             />
           ) : (
-            <Text>No data available.</Text>
+            <Text className="text-gray-600 font-mono">No data available</Text>
           )}
         </View>
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>AI Prediction</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-            <MaterialIcons name={trendIcon as MaterialIconName} size={24} color={trendColor} style={{ marginRight: 6 }} />
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: trendColor }}>{prediction}</Text>
-            <Text style={{ marginLeft: 8, color: '#888' }}>({confidence}% confidence)</Text>
+
+        {/* Investment Simulation */}
+        <View className="bg-white rounded-2xl p-4 mb-6 shadow">
+          <Text className="text-primary text-lg font-bold mb-2 font-mono">Investment Simulation</Text>
+          <View className="flex-row items-center mb-2">
+            <TextInput
+              className="flex-1 text-base text-primary font-mono mr-2"
+              placeholder={`Amount in ${selected.base}`}
+              value={simAmount}
+              onChangeText={setSimAmount}
+              keyboardType="numeric"
+              placeholderTextColor="#aaa"
+            />
+            <TouchableOpacity onPress={handleSimulate} className="bg-accent rounded-full p-2">
+              <MaterialIcons name="play-arrow" size={22} color="#0A2540" />
+            </TouchableOpacity>
           </View>
-          <Text style={{ marginBottom: 8 }}>{getExplanation(history)}</Text>
-          <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>{getInvestmentSuggestion(prediction, balance)}</Text>
-          <View style={{ marginTop: 10 }}>
-            <Text style={{ fontWeight: 'bold', marginBottom: 4 }}>Simulate Investment</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-              <Text style={{ marginRight: 6 }}>{selected.base}:</Text>
-              <View style={{ flex: 1 }}>
-                <TextInput
-                  style={styles.input}
-                  placeholder={`e.g. 100`}
-                  keyboardType="numeric"
-                  value={simAmount}
-                  onChangeText={setSimAmount}
-                />
-              </View>
-              <TouchableOpacity
-                style={styles.simButton}
-                onPress={() => {
-                  if (simAmount && !isNaN(Number(simAmount))) {
-                    setSimResult(simulateInvestment(Number(simAmount)));
-                  } else {
-                    setSimResult('Enter a valid amount.');
-                  }
-                }}
-              >
-                <MaterialIcons name="play-arrow" size={22} color="#fff" />
-              </TouchableOpacity>
-            </View>
-            {simResult && <Text style={{ color: '#007AFF' }}>{simResult}</Text>}
-          </View>
-        </View>
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>What does this mean?</Text>
-          <Text style={{ color: '#555' }}>
-            This predictor uses a simple moving average to analyze the last 7 days of forex data. The AI suggests trends and investment ideas, but always do your own research before investing.
-          </Text>
+          {simResult && <Text className="text-accent font-mono mt-1">{simResult}</Text>}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 18,
-    paddingBottom: 32,
-  },
-  sectionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 5,
-    elevation: 1,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#007AFF',
-  },
-  pairRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  pairButton: {
-    borderWidth: 1,
-    borderColor: '#007AFF',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    marginRight: 8,
-    marginBottom: 8,
-    backgroundColor: '#f6f8fa',
-  },
-  pairButtonActive: {
-    backgroundColor: '#007AFF',
-  },
-  pairButtonText: {
-    color: '#007AFF',
-    fontWeight: 'bold',
-  },
-  pairButtonTextActive: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 15,
-    backgroundColor: '#f7f7f7',
-    minWidth: 70,
-    marginHorizontal: 2,
-  },
-  simButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    padding: 8,
-    marginLeft: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
-
-export default PredictorScreen;
+}

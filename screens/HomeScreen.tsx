@@ -1,43 +1,24 @@
 // screens/HomeScreen.tsx
 
-import { MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5 } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { BarChart, LineChart } from 'react-native-chart-kit';
+import { Alert, Animated, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import logo from '../assets/logo.png';
 import { useBudget } from '../hooks/useBudget';
-import { fetchForexRatePair, fetchHistoricalRates, fetchTopMovers } from '../services/forexService';
-type MaterialIconName = React.ComponentProps<typeof MaterialIcons>['name'];
-const trendIcon: MaterialIconName = 'trending-up'; // example
-
-const screenWidth = Dimensions.get('window').width;
-
-// Mock data for 7-day trends
-const usdPkrTrend = [278, 279, 277, 280, 281, 282, 283];
-const eurUsdTrend = [1.08, 1.09, 1.10, 1.09, 1.08, 1.07, 1.08];
-
-function getInvestmentSuggestion(balance: number, usdPkrTrend: number[]) {
-  if (balance <= 0) return 'No available funds to invest.';
-  const last = usdPkrTrend.slice(-3).reduce((a, b) => a + b, 0) / 3;
-  const avg = usdPkrTrend.reduce((a, b) => a + b, 0) / usdPkrTrend.length;
-  if (last > avg) return `Uptrend likely. Consider investing Rs. ${(balance * 0.5).toFixed(0)} (50% of your balance)`;
-  if (last < avg) return 'Downtrend likely. Consider holding or investing less.';
-  return `Stable trend. You may invest Rs. ${(balance * 0.3).toFixed(0)} (30% of your balance)`;
-}
+import { fetchForexRatePair } from '../services/forexService';
+import { useTheme } from '../theme/ThemeContext';
 
 const HomeScreen: React.FC = () => {
+  const { theme } = useTheme();
   const [usdPkr, setUsdPkr] = useState<number | null>(null);
   const [eurUsd, setEurUsd] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [lastUpdated, setLastUpdated] = useState<string>('');
-  const [topMovers, setTopMovers] = useState<{ pair: string; change: number }[]>([]);
-  const [loadingMovers, setLoadingMovers] = useState(false);
-  const [moversError, setMoversError] = useState('');
-  const [usdPkrHistory, setUsdPkrHistory] = useState<number[]>([]);
-  const [eurUsdHistory, setEurUsdHistory] = useState<number[]>([]);
-  const [chartLabels, setChartLabels] = useState<string[]>([]);
-  const [loadingCharts, setLoadingCharts] = useState(false);
-  const [chartError, setChartError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
   const { income, categories, totalExpenses, balance } = useBudget();
+
+  // Animation values
+  const fadeAnim = new Animated.Value(0);
+  const slideAnim = new Animated.Value(50);
 
   const loadRates = async () => {
     setLoading(true);
@@ -46,244 +27,126 @@ const HomeScreen: React.FC = () => {
       const eurUsdRate = await fetchForexRatePair('EUR', 'USD');
       setUsdPkr(usdPkrRate);
       setEurUsd(eurUsdRate);
-      setLastUpdated(new Date().toLocaleTimeString());
     } catch (error) {
-      console.error('Failed to fetch rates:', error);
+      Alert.alert('Network Error', 'Unable to fetch live forex rates.');
     } finally {
       setLoading(false);
     }
   };
 
-  const loadTopMovers = async () => {
-    setLoadingMovers(true);
-    setMoversError('');
+  const onRefresh = async () => {
+    setRefreshing(true);
     try {
-      const movers = await fetchTopMovers();
-      setTopMovers(movers);
-    } catch (e) {
-      setMoversError('Failed to load top movers.');
+      await loadRates();
+    } catch (error) {
+      // handle error
     } finally {
-      setLoadingMovers(false);
-    }
-  };
-
-  const loadCharts = async () => {
-    setLoadingCharts(true);
-    setChartError('');
-    try {
-      const usdPkr = await fetchHistoricalRates('USD', 'PKR', 7);
-      const eurUsd = await fetchHistoricalRates('EUR', 'USD', 7);
-      setUsdPkrHistory(usdPkr.map(d => d.rate));
-      setEurUsdHistory(eurUsd.map(d => d.rate));
-      setChartLabels(usdPkr.map(d => d.date.slice(5))); // MM-DD
-    } catch (e) {
-      setChartError('Failed to load chart data.');
-    } finally {
-      setLoadingCharts(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     loadRates();
-    loadTopMovers();
-    loadCharts();
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-PK', {
+      style: 'currency',
+      currency: 'PKR',
+      minimumFractionDigits: 0,
+    }).format(amount || 0);
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Live Forex Rates</Text>
-      {loading ? (
-        <ActivityIndicator size="large" color="#007AFF" />
-      ) : (
-        <>
-          <Text style={styles.rateText}>
-            {usdPkr ? `1 USD = ${usdPkr.toFixed(2)} PKR` : 'USD/PKR not available'}
-          </Text>
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>USD/PKR (Last 7 Days)</Text>
-            {loadingCharts ? (
-              <ActivityIndicator size="small" color="#007AFF" />
-            ) : chartError ? (
-              <Text style={{ color: 'red' }}>{chartError}</Text>
-            ) : usdPkrHistory.length > 0 ? (
-              <LineChart
-                data={{
-                  labels: chartLabels,
-                  datasets: [{ data: usdPkrHistory }],
-                }}
-                width={screenWidth - 48}
-                height={120}
-                chartConfig={{
-                  backgroundColor: '#fff',
-                  backgroundGradientFrom: '#fff',
-                  backgroundGradientTo: '#fff',
-                  color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
-                  propsForDots: { r: '3', strokeWidth: '2', stroke: '#007AFF' },
-                }}
-                bezier
-                style={{ marginVertical: 8, borderRadius: 8 }}
-              />
-            ) : (
-              <Text>No data available.</Text>
-            )}
+    <View className="flex-1 bg-background">
+      {/* Welcome Banner with Logo */}
+      <View className="items-center py-6 bg-primary rounded-b-3xl mb-4">
+        <Image source={logo} style={{ width: 60, height: 60, marginBottom: 8 }} />
+        <Text className="text-white text-2xl font-bold font-mono">Welcome to ForexAdvisor</Text>
+        <Text className="text-accent text-base mt-1 font-mono">Your Smart Forex Dashboard</Text>
+      </View>
+
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 32 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Quick Stats Cards */}
+        <View className="flex-row justify-around mb-6">
+          {[{
+            label: 'Balance',
+            value: formatCurrency(balance || 0),
+            icon: <FontAwesome5 name="wallet" size={24} color="#FFD700" />,
+            color: 'bg-primary',
+          }, {
+            label: 'Income',
+            value: formatCurrency(parseFloat(income) || 0),
+            icon: <FontAwesome5 name="arrow-up" size={24} color="#1DE9B6" />,
+            color: 'bg-accent',
+          }, {
+            label: 'Expenses',
+            value: formatCurrency(totalExpenses || 0),
+            icon: <FontAwesome5 name="arrow-down" size={24} color="#FF5A5F" />,
+            color: 'bg-gold',
+          }].map((stat, idx) => (
+            <TouchableOpacity
+              key={stat.label}
+              activeOpacity={0.8}
+              className={`flex-1 mx-2 p-4 rounded-2xl shadow-lg items-center ${stat.color}`}
+              style={{
+                transform: [{ translateY: idx === 1 ? 0 : 8 }],
+                elevation: 4,
+              }}
+              onPress={() => {}}
+            >
+              {stat.icon}
+              <Text className="text-white text-xs mt-2 font-mono">{stat.label}</Text>
+              <Text className="text-white text-lg font-bold font-mono">{stat.value}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Forex Rates Section */}
+        <View className="px-4 mb-6">
+          <Text className="text-primary text-lg font-bold mb-2 font-mono">Live Forex Rates</Text>
+          <View className="flex-row justify-between">
+            <TouchableOpacity className="flex-1 bg-white rounded-xl p-4 mr-2 shadow" activeOpacity={0.85}>
+              <Text className="text-primary text-xs font-mono">USD/PKR</Text>
+              <Text className="text-2xl font-bold text-primary font-mono">{usdPkr ? usdPkr.toFixed(2) : '--'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity className="flex-1 bg-white rounded-xl p-4 ml-2 shadow" activeOpacity={0.85}>
+              <Text className="text-primary text-xs font-mono">EUR/USD</Text>
+              <Text className="text-2xl font-bold text-primary font-mono">{eurUsd ? eurUsd.toFixed(4) : '--'}</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.rateText}>
-            {eurUsd ? `1 EUR = ${eurUsd.toFixed(4)} USD` : 'EUR/USD not available'}
-          </Text>
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>EUR/USD (Last 7 Days)</Text>
-            {loadingCharts ? (
-              <ActivityIndicator size="small" color="#FF6384" />
-            ) : chartError ? (
-              <Text style={{ color: 'red' }}>{chartError}</Text>
-            ) : eurUsdHistory.length > 0 ? (
-              <LineChart
-                data={{
-                  labels: chartLabels,
-                  datasets: [{ data: eurUsdHistory }],
-                }}
-                width={screenWidth - 48}
-                height={120}
-                chartConfig={{
-                  backgroundColor: '#fff',
-                  backgroundGradientFrom: '#fff',
-                  backgroundGradientTo: '#fff',
-                  color: (opacity = 1) => `rgba(255, 99, 132, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
-                  propsForDots: { r: '3', strokeWidth: '2', stroke: '#FF6384' },
-                }}
-                bezier
-                style={{ marginVertical: 8, borderRadius: 8 }}
-              />
-            ) : (
-              <Text>No data available.</Text>
-            )}
+        </View>
+
+        {/* What's New / News Section */}
+        <View className="px-4">
+          <Text className="text-primary text-lg font-bold mb-2 font-mono">What's New</Text>
+          <View className="bg-white rounded-xl p-4 shadow mb-2">
+            <Text className="text-primary font-mono">• Daily market summary and top movers coming soon!</Text>
           </View>
-          <Text style={styles.updatedText}>Last updated: {lastUpdated}</Text>
-        </>
-      )}
-      <TouchableOpacity style={styles.button} onPress={loadRates}>
-        <Text style={styles.buttonText}>Refresh Rates</Text>
-      </TouchableOpacity>
-      <View style={styles.budgetSummary}>
-        <Text style={styles.budgetTitle}>Budget Summary</Text>
-        <Text>Income: Rs. {income || '0'}</Text>
-        <Text>Expenses: Rs. {totalExpenses || '0'}</Text>
-        <Text>Balance: Rs. {balance}</Text>
-      </View>
-      <View style={styles.investmentCard}>
-        <Text style={styles.investmentTitle}>Investment Suggestion</Text>
-        <Text>{getInvestmentSuggestion(balance, usdPkrTrend)}</Text>
-      </View>
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Top Movers (24h % change)</Text>
-        {loadingMovers ? (
-          <ActivityIndicator size="small" color="#007AFF" />
-        ) : moversError ? (
-          <Text style={{ color: 'red' }}>{moversError}</Text>
-        ) : topMovers.length > 0 ? (
-          <BarChart
-            data={{
-              labels: topMovers.map(m => m.pair),
-              datasets: [{ data: topMovers.map(m => Number(m.change.toFixed(2))) }],
-            }}
-            width={screenWidth - 48}
-            height={180}
-            fromZero
-            yAxisLabel=""
-            yAxisSuffix="%"
-            chartConfig={{
-              backgroundColor: '#fff',
-              backgroundGradientFrom: '#fff',
-              backgroundGradientTo: '#fff',
-              color: (opacity = 1) => `rgba(255, 140, 0, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
-              propsForBackgroundLines: { stroke: '#eee' },
-            }}
-            style={{ marginVertical: 8, borderRadius: 8 }}
-            showValuesOnTopOfBars
-          />
-        ) : (
-          <Text>No data available.</Text>
-        )}
-      </View>
+          <View className="bg-white rounded-xl p-4 shadow">
+            <Text className="text-primary font-mono">• AI-powered predictions and alerts will be available in the next update.</Text>
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 };
 
 export default HomeScreen;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  rateText: {
-    fontSize: 20,
-    marginVertical: 12,
-    color: '#333',
-  },
-  updatedText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  button: {
-    marginTop: 24,
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  budgetSummary: {
-    marginTop: 32,
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  budgetTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  investmentCard: {
-    marginTop: 24,
-    padding: 16,
-    backgroundColor: '#e6f7ff',
-    borderRadius: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  investmentTitle: {
-    fontSize: 17,
-    fontWeight: 'bold',
-    marginBottom: 6,
-  },
-  sectionCard: {
-    marginTop: 32,
-    padding: 16,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-});

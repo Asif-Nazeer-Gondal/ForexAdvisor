@@ -1,23 +1,33 @@
 // screens/BudgetCalculator.tsx
 
-import { MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
+    Alert,
     Dimensions,
-    SafeAreaView,
     ScrollView,
-    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     View
 } from 'react-native';
-import { LineChart, PieChart } from 'react-native-chart-kit';
+import { PieChart } from 'react-native-chart-kit';
 import { useBudget } from '../hooks/useBudget';
+import { useTheme } from '../theme/ThemeContext';
+
+const PLAN_TYPES = [
+  { label: 'Daily', value: 'daily', days: 1 },
+  { label: 'Weekly', value: 'weekly', days: 7 },
+  { label: 'Monthly', value: 'monthly', days: 30 },
+  { label: 'Quarterly', value: 'quarterly', days: 90 },
+  { label: 'Bi-Annual', value: 'biannual', days: 182 },
+  { label: 'Annual', value: 'annual', days: 365 },
+];
 
 const screenWidth = Dimensions.get('window').width;
 
-const BudgetCalculator: React.FC = () => {
+export default function BudgetCalculator() {
+  const { theme } = useTheme();
   const {
     income,
     setIncome,
@@ -27,297 +37,201 @@ const BudgetCalculator: React.FC = () => {
     saveBudget,
     totalExpenses,
     balance,
-    saveToHistory,
-    monthlyTotals,
-    selectedMonth,
-    setSelectedMonth,
   } = useBudget();
-
+  const [activePlan, setActivePlan] = useState('monthly');
   const [newCategory, setNewCategory] = useState('');
   const [newAmount, setNewAmount] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
 
   // Pie chart for category breakdown
   const categoryPieData = categories.map((c, i) => ({
     name: c.category,
     population: c.amount,
-    color: ['#4CAF50', '#F44336', '#2196F3', '#FF9800', '#9C27B0', '#009688'][i % 6],
-    legendFontColor: '#333',
-    legendFontSize: 14,
+    color: ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140'][i % 6],
+    legendFontColor: '#222',
+    legendFontSize: 12,
   })).filter(d => d.population > 0);
 
-  // Line chart for monthly history
-  const months = monthlyTotals.map(m => m.month.slice(2));
-  const expensesData = monthlyTotals.map(m => m.expenses);
-  const balanceData = monthlyTotals.map(m => m.balance);
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-PK', {
+      style: 'currency',
+      currency: 'PKR',
+      minimumFractionDigits: 0,
+    }).format(amount || 0);
+  };
+
+  // Plan calculations
+  const planDays = PLAN_TYPES.find(p => p.value === activePlan)?.days || 30;
+  const planIncome = (parseFloat(income) || 0) / (30 / planDays);
+  const planExpenses = (totalExpenses || 0) / (30 / planDays);
+  const planBalance = planIncome - planExpenses;
+
+  const handleSave = () => {
+    saveBudget();
+    Alert.alert('Success', 'Budget saved successfully!');
+  };
+
+  const handleAddCategory = () => {
+    if (newCategory && newAmount) {
+      setCategoryAmount(newCategory, parseFloat(newAmount) || 0);
+      setNewCategory('');
+      setNewAmount('');
+      setShowAddForm(false);
+    } else {
+      Alert.alert('Error', 'Please enter both category name and amount');
+    }
+  };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: '#f6f8fa' }]}>
-      <ScrollView contentContainerStyle={styles.container}>
-        {/* Summary Card */}
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>This Month</Text>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Income:</Text>
-            <Text style={styles.summaryValue}>Rs. {income || '0'}</Text>
+    <View className="flex-1 bg-background">
+      {/* Header */}
+      <View className="bg-primary rounded-b-3xl px-6 py-6 mb-4 flex-row items-center justify-between">
+        <View>
+          <Text className="text-white text-lg font-mono">Budget Management</Text>
+          <Text className="text-accent text-2xl font-bold font-mono">Smart Finance</Text>
+        </View>
+        <TouchableOpacity onPress={handleSave} className="bg-accent rounded-full p-3">
+          <MaterialIcons name="save" size={24} color="#0A2540" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+        {/* Quick Stats */}
+        <View className="flex-row justify-around mb-6 mt-2">
+          {[{
+            label: 'Income',
+            value: formatCurrency(parseFloat(income) || 0),
+            icon: <FontAwesome5 name="arrow-up" size={20} color="#1DE9B6" />,
+          }, {
+            label: 'Expenses',
+            value: formatCurrency(totalExpenses),
+            icon: <FontAwesome5 name="arrow-down" size={20} color="#FF5A5F" />,
+          }, {
+            label: 'Balance',
+            value: formatCurrency(balance),
+            icon: <FontAwesome5 name="wallet" size={20} color="#FFD700" />,
+          }].map(stat => (
+            <View key={stat.label} className="flex-1 mx-2 p-4 rounded-2xl shadow-lg items-center bg-white">
+              {stat.icon}
+              <Text className="text-primary text-xs mt-2 font-mono">{stat.label}</Text>
+              <Text className="text-primary text-lg font-bold font-mono">{stat.value}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Plan Calculator Tabs */}
+        <View className="flex-row justify-between mb-4 px-2">
+          {PLAN_TYPES.map(plan => (
+            <TouchableOpacity
+              key={plan.value}
+              className={`px-2 py-1 rounded-lg ${activePlan === plan.value ? 'bg-accent' : 'bg-white'}`}
+              onPress={() => setActivePlan(plan.value)}
+            >
+              <Text className={`font-mono text-xs ${activePlan === plan.value ? 'text-primary font-bold' : 'text-primary'}`}>{plan.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Plan Calculation Display */}
+        <View className="bg-white rounded-2xl p-4 mb-6 shadow">
+          <Text className="text-primary text-lg font-bold mb-2 font-mono">{PLAN_TYPES.find(p => p.value === activePlan)?.label} Plan</Text>
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-primary font-mono">Income:</Text>
+            <Text className="text-primary font-mono">{formatCurrency(planIncome)}</Text>
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Expenses:</Text>
-            <Text style={styles.summaryValue}>Rs. {totalExpenses}</Text>
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-primary font-mono">Expenses:</Text>
+            <Text className="text-primary font-mono">{formatCurrency(planExpenses)}</Text>
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Balance:</Text>
-            <Text style={[styles.summaryValue, { color: balance >= 0 ? '#4CAF50' : '#F44336' }]}>Rs. {balance}</Text>
+          <View className="flex-row justify-between">
+            <Text className="text-primary font-mono">Balance:</Text>
+            <Text className={`font-mono ${planBalance >= 0 ? 'text-accent' : 'text-red-500'}`}>{formatCurrency(planBalance)}</Text>
           </View>
         </View>
-        {/* Pie chart for category breakdown */}
+
+        {/* Income Input */}
+        <View className="bg-white rounded-2xl p-4 mb-6 shadow">
+          <Text className="text-primary text-lg font-bold mb-2 font-mono">Monthly Income</Text>
+          <View className="flex-row items-center">
+            <FontAwesome5 name="money-bill-wave" size={20} color="#667eea" style={{ marginRight: 8 }} />
+            <TextInput
+              className="flex-1 text-base text-primary font-mono"
+              placeholder="Enter your monthly income"
+              keyboardType="numeric"
+              value={income}
+              onChangeText={setIncome}
+              placeholderTextColor="#888"
+            />
+          </View>
+        </View>
+
+        {/* Expense Categories */}
+        <View className="bg-white rounded-2xl p-4 mb-6 shadow">
+          <View className="flex-row justify-between items-center mb-2">
+            <Text className="text-primary text-lg font-bold font-mono">Expense Categories</Text>
+            <TouchableOpacity onPress={() => setShowAddForm(!showAddForm)} className="bg-accent rounded-full p-2">
+              <MaterialIcons name={showAddForm ? 'close' : 'add'} size={20} color="#0A2540" />
+            </TouchableOpacity>
+          </View>
+          {showAddForm && (
+            <View className="flex-row items-center mb-3">
+              <TextInput
+                className="flex-1 text-base text-primary font-mono mr-2"
+                placeholder="Category"
+                value={newCategory}
+                onChangeText={setNewCategory}
+                placeholderTextColor="#aaa"
+              />
+              <TextInput
+                className="w-24 text-base text-primary font-mono mr-2"
+                placeholder="Amount"
+                value={newAmount}
+                onChangeText={setNewAmount}
+                keyboardType="numeric"
+                placeholderTextColor="#aaa"
+              />
+              <TouchableOpacity onPress={handleAddCategory} className="bg-primary rounded-full p-2">
+                <MaterialIcons name="check" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          )}
+          {categories.map((cat, idx) => (
+            <View key={cat.category} className="flex-row items-center mb-2">
+              <Text className="flex-1 text-primary font-mono">{cat.category}</Text>
+              <TextInput
+                className="w-24 text-base text-primary font-mono mr-2"
+                value={cat.amount.toString()}
+                onChangeText={val => setCategoryAmount(cat.category, parseFloat(val) || 0)}
+                keyboardType="numeric"
+                placeholderTextColor="#aaa"
+              />
+              <TouchableOpacity onPress={() => removeCategory(cat.category)} className="bg-red-500 rounded-full p-2">
+                <MaterialIcons name="delete" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+
+        {/* Pie Chart */}
         {categoryPieData.length > 0 && (
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Expense Breakdown</Text>
+          <View className="bg-white rounded-2xl p-4 mb-6 shadow items-center">
+            <Text className="text-primary text-lg font-bold mb-2 font-mono">Expense Breakdown</Text>
             <PieChart
               data={categoryPieData}
-              width={screenWidth - 48}
-              height={180}
+              width={screenWidth - 80}
+              height={200}
               chartConfig={{
-                color: (opacity = 1) => `rgba(0,0,0,${opacity})`,
+                color: (opacity = 1) => `rgba(34,34,34,${opacity})`,
               }}
               accessor="population"
               backgroundColor="transparent"
               paddingLeft="15"
               absolute
-              style={{ marginBottom: 8 }}
-            />
-          </View>
-        )}
-        {/* Add/Edit Categories */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Expense Categories</Text>
-          {categories.map((cat, idx) => (
-            <View key={cat.category} style={styles.categoryRow}>
-              <View style={[styles.colorDot, { backgroundColor: categoryPieData[idx % categoryPieData.length]?.color || '#ccc' }]} />
-              <Text style={{ flex: 1 }}>{cat.category}</Text>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={cat.amount.toString()}
-                onChangeText={val => setCategoryAmount(cat.category, parseFloat(val) || 0)}
-                placeholder="Amount"
-                placeholderTextColor="#aaa"
-              />
-              <TouchableOpacity onPress={() => removeCategory(cat.category)}>
-                <MaterialIcons name="delete" size={22} color="#F44336" style={{ marginLeft: 8 }} />
-              </TouchableOpacity>
-            </View>
-          ))}
-          <View style={styles.categoryRow}>
-            <View style={[styles.colorDot, { backgroundColor: '#bbb' }]} />
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="New Category"
-              value={newCategory}
-              onChangeText={setNewCategory}
-              placeholderTextColor="#aaa"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Amount"
-              keyboardType="numeric"
-              value={newAmount}
-              onChangeText={setNewAmount}
-              placeholderTextColor="#aaa"
-            />
-            <TouchableOpacity
-              onPress={() => {
-                if (newCategory && newAmount) {
-                  setCategoryAmount(newCategory, parseFloat(newAmount) || 0);
-                  setNewCategory('');
-                  setNewAmount('');
-                }
-              }}
-            >
-              <MaterialIcons name="add-circle" size={22} color="#007AFF" style={{ marginLeft: 8 }} />
-            </TouchableOpacity>
-          </View>
-        </View>
-        {/* Income input */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Monthly Income</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your income"
-            keyboardType="numeric"
-            value={income}
-            onChangeText={setIncome}
-            placeholderTextColor="#aaa"
-          />
-        </View>
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={() => {
-            saveBudget();
-            saveToHistory();
-          }}
-        >
-          <Text style={styles.saveButtonText}>Save Budget</Text>
-        </TouchableOpacity>
-        {/* Monthly history/trend chart */}
-        {monthlyTotals.length > 0 && (
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Monthly History (Expenses & Balance)</Text>
-            <LineChart
-              data={{
-                labels: months,
-                datasets: [
-                  { data: expensesData, color: () => '#F44336', strokeWidth: 2 },
-                  { data: balanceData, color: () => '#2196F3', strokeWidth: 2 },
-                ],
-                legend: ['Expenses', 'Balance'],
-              }}
-              width={screenWidth - 48}
-              height={180}
-              chartConfig={{
-                backgroundColor: '#fff',
-                backgroundGradientFrom: '#fff',
-                backgroundGradientTo: '#fff',
-                color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
-                propsForDots: { r: '3', strokeWidth: '2', stroke: '#2196F3' },
-              }}
-              bezier
-              style={{ marginVertical: 8, borderRadius: 8 }}
+              style={{ borderRadius: 16 }}
             />
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
-};
-
-export default BudgetCalculator;
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  container: {
-    flexGrow: 1,
-    padding: 24,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 0,
-    fontSize: 15,
-    backgroundColor: '#f7f7f7',
-    minWidth: 70,
-    marginHorizontal: 2,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  result: {
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  summaryCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 20,
-    marginBottom: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
-    elevation: 2,
-    alignItems: 'center',
-  },
-  summaryTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#007AFF',
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 4,
-  },
-  summaryLabel: {
-    fontSize: 15,
-    color: '#888',
-  },
-  summaryValue: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#222',
-  },
-  sectionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 5,
-    elevation: 1,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#007AFF',
-  },
-  colorDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    marginRight: 8,
-  },
-  saveButton: {
-    backgroundColor: '#007AFF',
-    padding: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 24,
-    marginTop: 8,
-    shadowColor: '#007AFF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});
+}
