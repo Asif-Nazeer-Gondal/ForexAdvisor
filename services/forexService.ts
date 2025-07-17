@@ -1,82 +1,96 @@
 // services/forexService.ts
 
-const fetchForexRate = async (): Promise<number> => {
-  try {
-    const response = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=PKR');
-    const data = await response.json();
-    if (!data.rates || typeof data.rates.PKR !== 'number') {
-      console.error('fetchForexRate: API response missing PKR rate:', JSON.stringify(data, null, 2));
-      return 0;
-    }
-    return data.rates.PKR;
-  } catch (error) {
-    console.error('Error fetching forex rate:', error);
-    return 0;
+import Constants from 'expo-constants';
+
+const extra = (Constants.manifest?.extra || Constants.expoConfig?.extra || {});
+
+const {
+  TWELVE_DATA_API_KEY,
+  EXCHANGE_RATE_API_KEY,
+  CURRENCY_API_KEY,
+  TWELVE_DATA_API_URL,
+  EXCHANGE_RATE_API_URL,
+  CURRENCY_API_URL,
+  FOREX_API_PROVIDER
+} = extra;
+
+// Helper to select provider config
+function getProviderConfig() {
+  switch (FOREX_API_PROVIDER) {
+    case 'TWELVE_DATA':
+      return {
+        url: TWELVE_DATA_API_URL,
+        key: TWELVE_DATA_API_KEY,
+        name: 'TWELVE_DATA',
+      };
+    case 'EXCHANGE_RATE_API':
+      return {
+        url: EXCHANGE_RATE_API_URL,
+        key: EXCHANGE_RATE_API_KEY,
+        name: 'EXCHANGE_RATE_API',
+      };
+    case 'CURRENCY_API':
+      return {
+        url: CURRENCY_API_URL,
+        key: CURRENCY_API_KEY,
+        name: 'CURRENCY_API',
+      };
+    default:
+      throw new Error('Unknown FOREX_API_PROVIDER');
   }
-};
+}
 
 export const fetchForexRatePair = async (base: string, target: string): Promise<number> => {
   try {
+    // Use exchangerate.host for free forex data
     const response = await fetch(`https://api.exchangerate.host/latest?base=${base}&symbols=${target}`);
     const data = await response.json();
-    if (!data.rates || typeof data.rates[target] !== 'number') {
-      console.error(`fetchForexRatePair: API response missing rate for ${base} to ${target}:`, JSON.stringify(data, null, 2));
+    
+    if (!data.rates || !data.rates[target]) {
+      console.error('fetchForexRatePair: API response missing rate:', JSON.stringify(data, null, 2));
       return 0;
     }
-    return data.rates[target];
+    
+    return Number(data.rates[target]);
   } catch (error) {
     console.error(`Error fetching forex rate for ${base} to ${target}:`, error);
     return 0;
   }
 };
 
-export const fetchTopMovers = async (ymd?: string): Promise<{ pair: string; change: number }[]> => {
+export const fetchTopMovers = async (): Promise<{ pair: string; change: number }[]> => {
   try {
-    // Fetch today and yesterday rates
-    const todayRes = await fetch('https://api.exchangerate.host/latest?base=USD');
-    const todayText = await todayRes.text();
-    let todayData;
-    try {
-      todayData = JSON.parse(todayText);
-    } catch (e) {
-      console.error('fetchTopMovers: Today response was not JSON:', todayText);
-      throw e;
-    }
-    if (!todayData.rates || typeof todayData.rates !== 'object') {
-      console.error('fetchTopMovers: Today rates missing or invalid:', JSON.stringify(todayData, null, 2));
+    // Use exchangerate.host for free forex data
+    const todayDate = new Date();
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(todayDate.getDate() - 1);
+    const todayStr = todayDate.toISOString().slice(0, 10);
+    const yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
+    
+    // Fetch today's rates
+    const todayRes = await fetch(`https://api.exchangerate.host/${todayStr}?base=USD`);
+    const todayData = await todayRes.json();
+    
+    // Fetch yesterday's rates
+    const yestRes = await fetch(`https://api.exchangerate.host/${yesterdayStr}?base=USD`);
+    const yestData = await yestRes.json();
+    
+    if (!todayData.rates || !yestData.rates) {
+      console.error('Error: Missing rates data from API');
       return [];
     }
-    let yesterdayDate: string;
-    if (ymd) {
-      yesterdayDate = ymd;
-    } else {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      yesterdayDate = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-    }
-    const yestRes = await fetch(`https://api.exchangerate.host/${yesterdayDate}?base=USD`);
-    const yestText = await yestRes.text();
-    let yestData;
-    try {
-      yestData = JSON.parse(yestText);
-    } catch (e) {
-      console.error('fetchTopMovers: Yesterday response was not JSON:', yestText);
-      throw e;
-    }
-    if (!yestData.rates || typeof yestData.rates !== 'object') {
-      console.error('fetchTopMovers: Yesterday rates missing or invalid:', JSON.stringify(yestData, null, 2));
-      return [];
-    }
+    
+    // Calculate movers
     const movers: { pair: string; change: number }[] = [];
-    for (const [currency, todayRateRaw] of Object.entries(todayData.rates)) {
-      const yestRateRaw = yestData.rates[currency];
-      const todayRate = Number(todayRateRaw);
-      const yestRate = Number(yestRateRaw);
-      if (!isNaN(todayRate) && !isNaN(yestRate) && yestRate !== 0) {
-        const change = ((todayRate - yestRate) / yestRate) * 100;
+    const currencies = ['EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'NZD', 'SEK', 'NOK'];
+    
+    for (const currency of currencies) {
+      if (todayData.rates[currency] && yestData.rates[currency]) {
+        const change = ((todayData.rates[currency] - yestData.rates[currency]) / yestData.rates[currency]) * 100;
         movers.push({ pair: `USD/${currency}`, change });
       }
     }
+    
     // Sort by absolute % change, descending, and take top 5
     return movers.sort((a, b) => Math.abs(b.change) - Math.abs(a.change)).slice(0, 5);
   } catch (error) {
@@ -111,5 +125,3 @@ export const fetchHistoricalRates = async (
     return [];
   }
 };
-
-export default fetchForexRate;

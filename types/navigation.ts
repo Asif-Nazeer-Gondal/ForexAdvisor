@@ -1,12 +1,12 @@
 // types/navigation.ts
 
-export type RootStackParamList = {
-  Home: undefined;
-  Budget: undefined;
-  Settings: undefined;
-  BudgetCalculator: undefined;
-  ForexRates: undefined; // Newly added screen
-};
+// Expo Router uses file-based routing, so we don't need explicit route definitions
+// This file can be used for any custom navigation types if needed in the future
 
-// This type is used for strong typing navigation between screens
-// Example: useNavigation<NativeStackNavigationProp<RootStackParamList>>()
+export type TabParamList = {
+  index: undefined;
+  explore: undefined;
+  budget: undefined;
+  predictor: undefined;
+  settings: undefined;
+};

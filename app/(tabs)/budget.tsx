@@ -1,5 +1,5 @@
 import BudgetCalculator from '../../screens/BudgetCalculator';
 
-export default function CalculatorTab() {
+export default function BudgetTab() {
   return <BudgetCalculator />;
-}
+} 

@@ -1,7 +1,7 @@
 // screens/ForexRates.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import fetchUSDtoPKR from '../services/forexService';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { fetchForexRatePair } from '../services/forexService';
 
 const ForexRates: React.FC = () => {
   const [rate, setRate] = useState<number | null>(null);
@@ -10,7 +10,7 @@ const ForexRates: React.FC = () => {
   useEffect(() => {
     const loadRate = async () => {
       try {
-        const fetchedRate = await fetchUSDtoPKR();
+        const fetchedRate = await fetchForexRatePair('USD', 'PKR');
         setRate(fetchedRate);
       } catch (error) {
         console.error('Error fetching USD to PKR rate:', error);
