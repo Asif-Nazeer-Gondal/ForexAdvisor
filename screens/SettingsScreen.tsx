@@ -1,137 +1,74 @@
 // File: screens/SettingsScreen.tsx
 import { MaterialIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Picker } from '@react-native-picker/picker';
-import React, { useEffect, useState } from 'react';
-import { Platform, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Image, Linking, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { useTheme } from '../theme/ThemeContext';
 
-const PAIRS = [
-  { label: 'USD/PKR', value: 'USD/PKR' },
-  { label: 'EUR/USD', value: 'EUR/USD' },
-  { label: 'GBP/USD', value: 'GBP/USD' },
-  { label: 'USD/JPY', value: 'USD/JPY' },
-];
+export default function SettingsScreen() {
+  const { theme } = useTheme();
+  const [notifications, setNotifications] = useState(true);
+  const [news, setNews] = useState(true);
+  const [darkMode, setDarkMode] = useState(theme.mode === 'dark');
 
-const SETTINGS_KEY = 'app_settings_v1';
-
-const SettingsScreen: React.FC = () => {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [defaultPair, setDefaultPair] = useState('USD/PKR');
-  const [reminder, setReminder] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      const saved = await AsyncStorage.getItem(SETTINGS_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setTheme(parsed.theme || 'light');
-        setDefaultPair(parsed.defaultPair || 'USD/PKR');
-        setReminder(!!parsed.reminder);
-      }
-      setLoading(false);
-    })();
-  }, []);
-
-  const saveSettings = async (next?: Partial<{ theme: string; defaultPair: string; reminder: boolean }>) => {
-    const newSettings = {
-      theme: next?.theme ?? theme,
-      defaultPair: next?.defaultPair ?? defaultPair,
-      reminder: next?.reminder ?? reminder,
-    };
-    setTheme(newSettings.theme as 'light' | 'dark');
-    setDefaultPair(newSettings.defaultPair);
-    setReminder(newSettings.reminder);
-    await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
+  // Placeholder profile info
+  const profile = {
+    name: 'Sohaib Ahmed',
+    email: 'your@email.com',
+    avatar: require('../assets/logo.png'),
   };
 
-  if (loading) return <View style={styles.container}><Text>Loading...</Text></View>;
-
   return (
-    <View style={[styles.container, { backgroundColor: '#f6f8fa' }]}> 
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Theme</Text>
-        <View style={styles.rowBetween}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <MaterialIcons name={theme === 'dark' ? 'dark-mode' : 'light-mode'} size={22} color="#007AFF" style={{ marginRight: 8 }} />
-            <Text style={{ fontSize: 15 }}>{theme === 'dark' ? 'Dark' : 'Light'} Mode</Text>
-          </View>
-          <Switch
-            value={theme === 'dark'}
-            onValueChange={v => saveSettings({ theme: v ? 'dark' : 'light' })}
-            thumbColor={theme === 'dark' ? '#222' : '#fff'}
-            trackColor={{ false: '#ccc', true: '#007AFF' }}
-          />
+    <ScrollView style={{ flex: 1, backgroundColor: theme.background }} contentContainerStyle={{ paddingBottom: 32 }}>
+      {/* Header */}
+      <View className="bg-primary rounded-b-3xl px-6 py-6 mb-4 flex-row items-center justify-between">
+        <Text className="text-white text-2xl font-bold font-mono">Settings</Text>
+        <MaterialIcons name="settings" size={28} color="#FFD700" />
+      </View>
+
+      {/* Profile Info */}
+      <View className="bg-white rounded-2xl p-5 mb-6 shadow flex-row items-center">
+        <Image source={profile.avatar} style={{ width: 56, height: 56, borderRadius: 28, marginRight: 16 }} />
+        <View>
+          <Text className="text-primary text-lg font-bold font-mono mb-1">{profile.name}</Text>
+          <Text className="text-gray-600 font-mono">{profile.email}</Text>
         </View>
       </View>
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Default Currency Pair</Text>
-        <View style={styles.rowBetween}>
-          <MaterialIcons name="swap-horiz" size={22} color="#007AFF" style={{ marginRight: 8 }} />
-          <Picker
-            selectedValue={defaultPair}
-            style={{ flex: 1, backgroundColor: '#f7f7f7', borderRadius: 8 }}
-            onValueChange={(v: string) => saveSettings({ defaultPair: v })}
-            mode={Platform.OS === 'ios' ? 'dropdown' : 'dialog'}
-          >
-            {PAIRS.map(pair => (
-              <Picker.Item key={pair.value} label={pair.label} value={pair.value} />
-            ))}
-          </Picker>
+
+      {/* Notification Preferences */}
+      <View className="bg-white rounded-2xl p-5 mb-6 shadow">
+        <Text className="text-primary text-lg font-bold mb-3 font-mono">Notifications</Text>
+        <View className="flex-row items-center justify-between mb-3">
+          <Text className="text-primary font-mono">Market Alerts</Text>
+          <Switch value={notifications} onValueChange={setNotifications} thumbColor={notifications ? '#1DE9B6' : '#ccc'} trackColor={{ true: '#A7F3D0', false: '#eee' }} />
+        </View>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-primary font-mono">Forex News</Text>
+          <Switch value={news} onValueChange={setNews} thumbColor={news ? '#FFD700' : '#ccc'} trackColor={{ true: '#FEF08A', false: '#eee' }} />
         </View>
       </View>
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Daily Reminder</Text>
-        <View style={styles.rowBetween}>
-          <MaterialIcons name="notifications-active" size={22} color="#007AFF" style={{ marginRight: 8 }} />
-          <Switch
-            value={reminder}
-            onValueChange={v => saveSettings({ reminder: v })}
-            thumbColor={reminder ? '#007AFF' : '#fff'}
-            trackColor={{ false: '#ccc', true: '#007AFF' }}
-          />
-        </View>
+
+      {/* Theme Toggle */}
+      <View className="bg-white rounded-2xl p-5 mb-6 shadow flex-row items-center justify-between">
+        <Text className="text-primary text-lg font-bold font-mono">Dark Mode</Text>
+        <Switch value={darkMode} onValueChange={setDarkMode} thumbColor={darkMode ? '#0A2540' : '#ccc'} trackColor={{ true: '#1DE9B6', false: '#eee' }} />
       </View>
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>About</Text>
-        <Text style={{ color: '#555', marginBottom: 4 }}>ForexAdvisor v1.0</Text>
-        <Text style={{ color: '#555' }}>Made with ❤️ by Asif Gondal</Text>
-        <TouchableOpacity onPress={() => {}} style={{ marginTop: 8 }}>
-          <Text style={{ color: '#007AFF', fontWeight: 'bold' }}>Visit GitHub</Text>
+
+      {/* Support & About */}
+      <View className="bg-white rounded-2xl p-5 shadow">
+        <Text className="text-primary text-lg font-bold mb-3 font-mono">Support & About</Text>
+        <TouchableOpacity className="flex-row items-center mb-2" onPress={() => Linking.openURL('mailto:support@forexadvisor.com')}>
+          <MaterialIcons name="email" size={20} color="#1DE9B6" style={{ marginRight: 8 }} />
+          <Text className="text-primary font-mono">Contact Support</Text>
         </TouchableOpacity>
+        <TouchableOpacity className="flex-row items-center mb-2" onPress={() => Linking.openURL('https://forexadvisor.com')}>
+          <MaterialIcons name="public" size={20} color="#FFD700" style={{ marginRight: 8 }} />
+          <Text className="text-primary font-mono">Visit Website</Text>
+        </TouchableOpacity>
+        <View className="flex-row items-center mt-2">
+          <MaterialIcons name="info" size={20} color="#888" style={{ marginRight: 8 }} />
+          <Text className="text-gray-600 font-mono">App Version 1.0.0</Text>
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 18,
-    paddingBottom: 32,
-  },
-  sectionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 5,
-    elevation: 1,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#007AFF',
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-});
-
-export default SettingsScreen;
+}
