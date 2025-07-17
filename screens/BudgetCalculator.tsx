@@ -6,6 +6,7 @@ import {
     Alert,
     Dimensions,
     ScrollView,
+    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
@@ -83,21 +84,21 @@ export default function BudgetCalculator() {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <View style={styles.flex1BgBackground}>
       {/* Header */}
-      <View className="bg-primary rounded-b-3xl px-6 py-6 mb-4 flex-row items-center justify-between">
+      <View style={styles.headerContainer}>
         <View>
-          <Text className="text-white text-lg font-mono">Budget Management</Text>
-          <Text className="text-accent text-2xl font-bold font-mono">Smart Finance</Text>
+          <Text style={styles.headerTitle}>Budget Management</Text>
+          <Text style={styles.headerSubtitle}>Smart Finance</Text>
         </View>
-        <TouchableOpacity onPress={handleSave} className="bg-accent rounded-full p-3">
+        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
           <MaterialIcons name="save" size={24} color="#0A2540" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.flex1} contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
         {/* Quick Stats */}
-        <View className="flex-row justify-around mb-6 mt-2">
+        <View style={styles.statsRow}>
           {[{
             label: 'Income',
             value: formatCurrency(parseFloat(income) || 0),
@@ -111,102 +112,102 @@ export default function BudgetCalculator() {
             value: formatCurrency(balance),
             icon: <FontAwesome5 name="wallet" size={20} color="#FFD700" />,
           }].map(stat => (
-            <View key={stat.label} className="flex-1 mx-2 p-4 rounded-2xl shadow-lg items-center bg-white">
+            <View key={stat.label} style={styles.statCard}>
               {stat.icon}
-              <Text className="text-primary text-xs mt-2 font-mono">{stat.label}</Text>
-              <Text className="text-primary text-lg font-bold font-mono">{stat.value}</Text>
+              <Text style={styles.statLabel}>{stat.label}</Text>
+              <Text style={styles.statValue}>{stat.value}</Text>
             </View>
           ))}
         </View>
 
         {/* Plan Calculator Tabs */}
-        <View className="flex-row justify-between mb-4 px-2">
+        <View style={styles.planRow}>
           {PLAN_TYPES.map(plan => (
             <TouchableOpacity
               key={plan.value}
-              className={`px-2 py-1 rounded-lg ${activePlan === plan.value ? 'bg-accent' : 'bg-white'}`}
+              style={[styles.planButton, activePlan === plan.value && styles.planButtonActive]}
               onPress={() => setActivePlan(plan.value)}
             >
-              <Text className={`font-mono text-xs ${activePlan === plan.value ? 'text-primary font-bold' : 'text-primary'}`}>{plan.label}</Text>
+              <Text style={[styles.planButtonText, activePlan === plan.value && styles.planButtonTextActive]}>{plan.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Plan Calculation Display */}
-        <View className="bg-white rounded-2xl p-4 mb-6 shadow">
-          <Text className="text-primary text-lg font-bold mb-2 font-mono">{PLAN_TYPES.find(p => p.value === activePlan)?.label} Plan</Text>
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-primary font-mono">Income:</Text>
-            <Text className="text-primary font-mono">{formatCurrency(planIncome)}</Text>
+        <View style={styles.planCard}>
+          <Text style={styles.planCardTitle}>{PLAN_TYPES.find(p => p.value === activePlan)?.label} Plan</Text>
+          <View style={styles.rowBetween}>
+            <Text style={styles.planCardLabel}>Income:</Text>
+            <Text style={styles.planCardLabel}>{formatCurrency(planIncome)}</Text>
           </View>
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-primary font-mono">Expenses:</Text>
-            <Text className="text-primary font-mono">{formatCurrency(planExpenses)}</Text>
+          <View style={styles.rowBetween}>
+            <Text style={styles.planCardLabel}>Expenses:</Text>
+            <Text style={styles.planCardLabel}>{formatCurrency(planExpenses)}</Text>
           </View>
-          <View className="flex-row justify-between">
-            <Text className="text-primary font-mono">Balance:</Text>
-            <Text className={`font-mono ${planBalance >= 0 ? 'text-accent' : 'text-red-500'}`}>{formatCurrency(planBalance)}</Text>
+          <View style={styles.rowBetween}>
+            <Text style={styles.planCardLabel}>Balance:</Text>
+            <Text style={[styles.planCardLabel, planBalance >= 0 ? styles.balancePositive : styles.balanceNegative]}>{formatCurrency(planBalance)}</Text>
           </View>
         </View>
 
         {/* Income Input */}
-        <View className="bg-white rounded-2xl p-4 mb-6 shadow">
-          <Text className="text-primary text-lg font-bold mb-2 font-mono">Monthly Income</Text>
-          <View className="flex-row items-center">
+        <View style={styles.monthlyIncomeCard}>
+          <Text style={styles.monthlyIncomeTitle}>Monthly Income</Text>
+          <View style={styles.rowCenter}>
             <FontAwesome5 name="money-bill-wave" size={20} color="#667eea" style={{ marginRight: 8 }} />
             <TextInput
-              className="flex-1 text-base text-primary font-mono"
+              style={styles.input}
               placeholder="Enter your monthly income"
               keyboardType="numeric"
               value={income}
               onChangeText={setIncome}
-              placeholderTextColor="#888"
+              placeholderTextColor="#aaa"
             />
           </View>
         </View>
 
         {/* Expense Categories */}
-        <View className="bg-white rounded-2xl p-4 mb-6 shadow">
-          <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-primary text-lg font-bold font-mono">Expense Categories</Text>
-            <TouchableOpacity onPress={() => setShowAddForm(!showAddForm)} className="bg-accent rounded-full p-2">
-              <MaterialIcons name={showAddForm ? 'close' : 'add'} size={20} color="#0A2540" />
+        <View style={styles.expensesCard}>
+          <View style={styles.rowBetweenCenter}>
+            <Text style={styles.expensesTitle}>Expense Categories</Text>
+            <TouchableOpacity onPress={() => setShowAddForm(!showAddForm)} style={styles.addButton}>
+              <Text style={styles.addButtonText}>+</Text>
             </TouchableOpacity>
           </View>
           {showAddForm && (
-            <View className="flex-row items-center mb-3">
+            <View style={styles.addFormRow}>
               <TextInput
-                className="flex-1 text-base text-primary font-mono mr-2"
+                style={styles.inputFlex}
                 placeholder="Category"
                 value={newCategory}
                 onChangeText={setNewCategory}
                 placeholderTextColor="#aaa"
               />
               <TextInput
-                className="w-24 text-base text-primary font-mono mr-2"
+                style={styles.inputSmall}
                 placeholder="Amount"
                 value={newAmount}
                 onChangeText={setNewAmount}
                 keyboardType="numeric"
                 placeholderTextColor="#aaa"
               />
-              <TouchableOpacity onPress={handleAddCategory} className="bg-primary rounded-full p-2">
-                <MaterialIcons name="check" size={20} color="#fff" />
+              <TouchableOpacity onPress={handleAddCategory} style={styles.addButtonSmall}>
+                <Text style={styles.addButtonText}>Add</Text>
               </TouchableOpacity>
             </View>
           )}
-          {categories.map((cat, idx) => (
-            <View key={cat.category} className="flex-row items-center mb-2">
-              <Text className="flex-1 text-primary font-mono">{cat.category}</Text>
+          {categories.map(cat => (
+            <View key={cat.category} style={styles.categoryRow}>
+              <Text style={styles.categoryLabel}>{cat.category}</Text>
               <TextInput
-                className="w-24 text-base text-primary font-mono mr-2"
+                style={styles.inputSmall}
                 value={cat.amount.toString()}
                 onChangeText={val => setCategoryAmount(cat.category, parseFloat(val) || 0)}
                 keyboardType="numeric"
                 placeholderTextColor="#aaa"
               />
-              <TouchableOpacity onPress={() => removeCategory(cat.category)} className="bg-red-500 rounded-full p-2">
-                <MaterialIcons name="delete" size={18} color="#fff" />
+              <TouchableOpacity onPress={() => removeCategory(cat.category)} style={styles.removeButton}>
+                <Text style={styles.removeButtonText}>X</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -214,8 +215,8 @@ export default function BudgetCalculator() {
 
         {/* Pie Chart */}
         {categoryPieData.length > 0 && (
-          <View className="bg-white rounded-2xl p-4 mb-6 shadow items-center">
-            <Text className="text-primary text-lg font-bold mb-2 font-mono">Expense Breakdown</Text>
+          <View style={styles.expenseBreakdownCard}>
+            <Text style={styles.expenseBreakdownTitle}>Expense Breakdown</Text>
             <PieChart
               data={categoryPieData}
               width={screenWidth - 80}
@@ -235,3 +236,265 @@ export default function BudgetCalculator() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  flex1BgBackground: {
+    flex: 1,
+    backgroundColor: '#F5F7FA',
+  },
+  headerContainer: {
+    backgroundColor: '#0A2540',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontFamily: 'SpaceMono',
+  },
+  headerSubtitle: {
+    color: '#1DE9B6',
+    fontSize: 24,
+    fontWeight: 'bold',
+    fontFamily: 'SpaceMono',
+  },
+  saveButton: {
+    backgroundColor: '#1DE9B6',
+    borderRadius: 24,
+    padding: 12,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  flex1: {
+    flex: 1,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 24,
+    marginTop: 8,
+  },
+  statCard: {
+    flex: 1,
+    marginHorizontal: 8,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  statLabel: {
+    color: '#0A2540',
+    fontSize: 12,
+    marginTop: 8,
+    fontFamily: 'SpaceMono',
+  },
+  statValue: {
+    color: '#0A2540',
+    fontSize: 18,
+    fontWeight: 'bold',
+    fontFamily: 'SpaceMono',
+  },
+  planRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  planButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    marginHorizontal: 4,
+  },
+  planButtonActive: {
+    backgroundColor: '#1DE9B6',
+  },
+  planButtonText: {
+    fontFamily: 'SpaceMono',
+    fontSize: 12,
+    color: '#0A2540',
+  },
+  planButtonTextActive: {
+    fontWeight: 'bold',
+    color: '#0A2540',
+  },
+  planCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  planCardTitle: {
+    color: '#0A2540',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontFamily: 'SpaceMono',
+  },
+  planCardLabel: {
+    color: '#0A2540',
+    fontFamily: 'SpaceMono',
+  },
+  balancePositive: {
+    color: '#1DE9B6',
+  },
+  balanceNegative: {
+    color: '#FF5252',
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  monthlyIncomeCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  monthlyIncomeTitle: {
+    color: '#0A2540',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontFamily: 'SpaceMono',
+  },
+  rowCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#F5F7FA',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    color: '#0A2540',
+    fontFamily: 'SpaceMono',
+  },
+  expensesCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  expensesTitle: {
+    color: '#0A2540',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontFamily: 'SpaceMono',
+  },
+  rowBetweenCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  addButton: {
+    backgroundColor: '#1DE9B6',
+    borderRadius: 16,
+    padding: 8,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  addFormRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  inputFlex: {
+    flex: 1,
+    backgroundColor: '#F5F7FA',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    color: '#0A2540',
+    fontFamily: 'SpaceMono',
+    marginRight: 8,
+  },
+  inputSmall: {
+    width: 80,
+    backgroundColor: '#F5F7FA',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    color: '#0A2540',
+    fontFamily: 'SpaceMono',
+    marginRight: 8,
+  },
+  addButtonSmall: {
+    backgroundColor: '#0A2540',
+    borderRadius: 16,
+    padding: 8,
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  categoryLabel: {
+    flex: 1,
+    color: '#0A2540',
+    fontFamily: 'SpaceMono',
+  },
+  removeButton: {
+    backgroundColor: '#FF5252',
+    borderRadius: 16,
+    padding: 8,
+  },
+  removeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  expenseBreakdownCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  expenseBreakdownTitle: {
+    color: '#0A2540',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontFamily: 'SpaceMono',
+  },
+});

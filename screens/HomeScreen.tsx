@@ -2,13 +2,13 @@
 
 import { FontAwesome5 } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { Alert, Animated, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import logo from '../assets/logo.png';
 import { useBudget } from '../hooks/useBudget';
 import { fetchForexRatePair } from '../services/forexService';
 import { useTheme } from '../theme/ThemeContext';
 
-const HomeScreen: React.FC = () => {
+export default function HomeScreen() {
   const { theme } = useTheme();
   const [usdPkr, setUsdPkr] = useState<number | null>(null);
   const [eurUsd, setEurUsd] = useState<number | null>(null);
@@ -69,84 +69,198 @@ const HomeScreen: React.FC = () => {
     }).format(amount || 0);
   };
 
-  return (
-    <View className="flex-1 bg-background">
-      {/* Welcome Banner with Logo */}
-      <View className="items-center py-6 bg-primary rounded-b-3xl mb-4">
-        <Image source={logo} style={{ width: 60, height: 60, marginBottom: 8 }} />
-        <Text className="text-white text-2xl font-bold font-mono">Welcome to ForexAdvisor</Text>
-        <Text className="text-accent text-base mt-1 font-mono">Your Smart Forex Dashboard</Text>
-      </View>
+  const refreshControl = (
+    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+  );
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 32 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Quick Stats Cards */}
-        <View className="flex-row justify-around mb-6">
-          {[{
-            label: 'Balance',
-            value: formatCurrency(balance || 0),
-            icon: <FontAwesome5 name="wallet" size={24} color="#FFD700" />,
-            color: 'bg-primary',
-          }, {
-            label: 'Income',
-            value: formatCurrency(parseFloat(income) || 0),
-            icon: <FontAwesome5 name="arrow-up" size={24} color="#1DE9B6" />,
-            color: 'bg-accent',
-          }, {
-            label: 'Expenses',
-            value: formatCurrency(totalExpenses || 0),
-            icon: <FontAwesome5 name="arrow-down" size={24} color="#FF5A5F" />,
-            color: 'bg-gold',
-          }].map((stat, idx) => (
+  const stats = [
+    {
+      label: 'Balance',
+      value: formatCurrency(balance || 0),
+      icon: <FontAwesome5 name="wallet" size={24} color="#FFD700" />,
+      color: '#0A2540',
+      onPress: () => {},
+    },
+    {
+      label: 'Income',
+      value: formatCurrency(parseFloat(income) || 0),
+      icon: <FontAwesome5 name="arrow-up" size={24} color="#1DE9B6" />,
+      color: '#1DE9B6',
+      onPress: () => {},
+    },
+    {
+      label: 'Expenses',
+      value: formatCurrency(totalExpenses || 0),
+      icon: <FontAwesome5 name="arrow-down" size={24} color="#FF5A5F" />,
+      color: '#FF5A5F',
+      onPress: () => {},
+    },
+  ];
+
+  return (
+    <View style={styles.flex1BgBackground}>
+      <View style={styles.headerContainer}>
+        <Image source={logo} style={styles.logo} />
+        <View>
+          <Text style={styles.headerTitle}>Welcome to ForexAdvisor</Text>
+          <Text style={styles.headerSubtitle}>Your Smart Forex Dashboard</Text>
+        </View>
+      </View>
+      <ScrollView style={styles.flex1} contentContainerStyle={{ paddingBottom: 32 }} refreshControl={refreshControl} showsVerticalScrollIndicator={false}>
+        <View style={styles.statsRow}>
+          {stats.map(stat => (
             <TouchableOpacity
               key={stat.label}
-              activeOpacity={0.8}
-              className={`flex-1 mx-2 p-4 rounded-2xl shadow-lg items-center ${stat.color}`}
-              style={{
-                transform: [{ translateY: idx === 1 ? 0 : 8 }],
-                elevation: 4,
-              }}
-              onPress={() => {}}
+              style={[styles.statCard, { backgroundColor: stat.color }]}
+              activeOpacity={0.85}
+              onPress={stat.onPress}
             >
               {stat.icon}
-              <Text className="text-white text-xs mt-2 font-mono">{stat.label}</Text>
-              <Text className="text-white text-lg font-bold font-mono">{stat.value}</Text>
+              <Text style={styles.statLabel}>{stat.label}</Text>
+              <Text style={styles.statValue}>{stat.value}</Text>
             </TouchableOpacity>
           ))}
         </View>
-
-        {/* Forex Rates Section */}
-        <View className="px-4 mb-6">
-          <Text className="text-primary text-lg font-bold mb-2 font-mono">Live Forex Rates</Text>
-          <View className="flex-row justify-between">
-            <TouchableOpacity className="flex-1 bg-white rounded-xl p-4 mr-2 shadow" activeOpacity={0.85}>
-              <Text className="text-primary text-xs font-mono">USD/PKR</Text>
-              <Text className="text-2xl font-bold text-primary font-mono">{usdPkr ? usdPkr.toFixed(2) : '--'}</Text>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Live Forex Rates</Text>
+          <View style={styles.ratesRow}>
+            <TouchableOpacity style={[styles.rateCard, { marginRight: 8 }]} activeOpacity={0.85}>
+              <Text style={styles.rateLabel}>USD/PKR</Text>
+              <Text style={styles.rateValue}>{usdPkr ? usdPkr.toFixed(2) : '--'}</Text>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-1 bg-white rounded-xl p-4 ml-2 shadow" activeOpacity={0.85}>
-              <Text className="text-primary text-xs font-mono">EUR/USD</Text>
-              <Text className="text-2xl font-bold text-primary font-mono">{eurUsd ? eurUsd.toFixed(4) : '--'}</Text>
+            <TouchableOpacity style={[styles.rateCard, { marginLeft: 8 }]} activeOpacity={0.85}>
+              <Text style={styles.rateLabel}>EUR/USD</Text>
+              <Text style={styles.rateValue}>{eurUsd ? eurUsd.toFixed(4) : '--'}</Text>
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* What's New / News Section */}
-        <View className="px-4">
-          <Text className="text-primary text-lg font-bold mb-2 font-mono">What's New</Text>
-          <View className="bg-white rounded-xl p-4 shadow mb-2">
-            <Text className="text-primary font-mono">• Daily market summary and top movers coming soon!</Text>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>What's New</Text>
+          <View style={styles.newsCard}>
+            <Text style={styles.newsText}>• Daily market summary and top movers coming soon!</Text>
           </View>
-          <View className="bg-white rounded-xl p-4 shadow">
-            <Text className="text-primary font-mono">• AI-powered predictions and alerts will be available in the next update.</Text>
+          <View style={styles.newsCard}>
+            <Text style={styles.newsText}>• AI-powered predictions and alerts will be available in the next update.</Text>
           </View>
         </View>
       </ScrollView>
     </View>
   );
-};
+}
 
-export default HomeScreen;
+const styles = StyleSheet.create({
+  flex1BgBackground: {
+    flex: 1,
+    backgroundColor: '#F5F7FA',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 24,
+    backgroundColor: '#0A2540',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    marginBottom: 16,
+  },
+  logo: {
+    width: 48,
+    height: 48,
+    marginRight: 16,
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: 'bold',
+    fontFamily: 'SpaceMono',
+  },
+  headerSubtitle: {
+    color: '#1DE9B6',
+    fontSize: 16,
+    fontFamily: 'SpaceMono',
+    marginTop: 4,
+  },
+  flex1: {
+    flex: 1,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 24,
+    marginTop: 8,
+  },
+  statCard: {
+    flex: 1,
+    marginHorizontal: 8,
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  statLabel: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 8,
+    fontFamily: 'SpaceMono',
+  },
+  statValue: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    fontFamily: 'SpaceMono',
+  },
+  sectionContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    color: '#0A2540',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontFamily: 'SpaceMono',
+  },
+  ratesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  rateCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  rateLabel: {
+    color: '#0A2540',
+    fontSize: 12,
+    fontFamily: 'SpaceMono',
+  },
+  rateValue: {
+    color: '#0A2540',
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontFamily: 'SpaceMono',
+  },
+  newsCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  newsText: {
+    color: '#0A2540',
+    fontFamily: 'SpaceMono',
+  },
+});

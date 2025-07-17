@@ -1,5 +1,5 @@
 // screens/PredictorScreen.tsx
-import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -8,6 +8,7 @@ import {
     Dimensions,
     ScrollView,
     StatusBar,
+    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
@@ -139,58 +140,54 @@ export default function PredictorScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <View style={styles.flex1BgBackground}>
       <StatusBar barStyle={theme.background === '#fff' ? 'dark-content' : 'light-content'} backgroundColor={theme.background} />
       
       {/* Header */}
-      <View className="bg-primary rounded-b-3xl px-6 py-6 mb-4 flex-row items-center justify-between">
-        <View>
-          <Text className="text-white text-lg font-mono">AI-Powered</Text>
-          <Text className="text-accent text-2xl font-bold font-mono">Forex Predictor</Text>
-        </View>
-        <TouchableOpacity onPress={loadHistory} className="bg-accent rounded-full p-3">
-          <MaterialIcons name="refresh" size={24} color="#0A2540" />
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerTitle}>AI-Powered</Text>
+        <Text style={styles.headerSubtitle}>Forex Predictor</Text>
+        <TouchableOpacity onPress={loadHistory} style={styles.loadButton}>
+          <Text style={styles.loadButtonText}>Load</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.flex1} contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
         {/* Pair Selector */}
-        <View className="flex-row justify-between mb-4 px-2">
+        <View style={styles.pairRow}>
           {PAIRS.map(pair => (
             <TouchableOpacity
               key={pair.label}
-              className={`flex-1 mx-1 px-2 py-2 rounded-lg items-center ${selected.label === pair.label ? 'bg-accent' : 'bg-white'}`}
+              style={[styles.pairButton, selected.label === pair.label && styles.pairButtonActive]}
               onPress={() => setSelected(pair)}
             >
-              <FontAwesome5 name={pair.icon as any} size={18} color={selected.label === pair.label ? '#0A2540' : '#1DE9B6'} />
-              <Text className={`font-mono text-xs mt-1 ${selected.label === pair.label ? 'text-primary font-bold' : 'text-primary'}`}>{pair.label}</Text>
+              <Text style={[styles.pairButtonText, selected.label === pair.label && styles.pairButtonTextActive]}>{pair.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Prediction Result */}
-        <View className="bg-white rounded-2xl p-4 mb-6 shadow items-center">
-          <Text className="text-primary text-lg font-bold mb-2 font-mono">Prediction</Text>
+        <View style={styles.predictionCard}>
+          <Text style={styles.predictionTitle}>Prediction</Text>
           {loading ? (
             <ActivityIndicator size="large" color="#1DE9B6" />
           ) : error ? (
-            <Text className="text-red-500 font-mono">{error}</Text>
+            <Text style={styles.errorText}>{error}</Text>
           ) : (
             <>
-              <View className="flex-row items-center mb-2">
-                <MaterialIcons name={trendIcon as MaterialIconName} size={28} color={trendColor} style={{ marginRight: 8 }} />
-                <Text className="text-primary text-xl font-bold font-mono">{prediction}</Text>
+              <View style={styles.predictionRow}>
+                <Text style={styles.predictionValue}>{prediction}</Text>
               </View>
-              <Text className="text-primary font-mono mb-1">Confidence: {confidence}%</Text>
-              <Text className="text-gray-600 font-mono mb-2 text-center">{getExplanation(history)}</Text>
-              <Text className="text-accent font-mono text-center">{getInvestmentSuggestion(prediction, balance)}</Text>
+              <Text style={styles.confidenceText}>Confidence: {confidence}%</Text>
+              <Text style={styles.explanationText}>{getExplanation(history)}</Text>
+              <Text style={styles.suggestionText}>{getInvestmentSuggestion(prediction, balance)}</Text>
             </>
           )}
         </View>
 
         {/* Chart */}
-        <View className="bg-white rounded-2xl p-4 mb-6 shadow items-center">
-          <Text className="text-primary text-lg font-bold mb-2 font-mono">7-Day Trend</Text>
+        <View style={styles.trendCard}>
+          <Text style={styles.trendTitle}>7-Day Trend</Text>
           {loading ? (
             <ActivityIndicator size="small" color="#1DE9B6" />
           ) : history.length > 0 ? (
@@ -214,29 +211,215 @@ export default function PredictorScreen() {
               style={{ borderRadius: 16 }}
             />
           ) : (
-            <Text className="text-gray-600 font-mono">No data available</Text>
+            <Text style={styles.noDataText}>No data available</Text>
           )}
         </View>
 
         {/* Investment Simulation */}
-        <View className="bg-white rounded-2xl p-4 mb-6 shadow">
-          <Text className="text-primary text-lg font-bold mb-2 font-mono">Investment Simulation</Text>
-          <View className="flex-row items-center mb-2">
+        <View style={styles.simulationCard}>
+          <Text style={styles.simulationTitle}>Investment Simulation</Text>
+          <View style={styles.simulationRow}>
             <TextInput
-              className="flex-1 text-base text-primary font-mono mr-2"
+              style={styles.input}
               placeholder={`Amount in ${selected.base}`}
               value={simAmount}
               onChangeText={setSimAmount}
               keyboardType="numeric"
               placeholderTextColor="#aaa"
             />
-            <TouchableOpacity onPress={handleSimulate} className="bg-accent rounded-full p-2">
-              <MaterialIcons name="play-arrow" size={22} color="#0A2540" />
+            <TouchableOpacity onPress={handleSimulate} style={styles.simulateButton}>
+              <Text style={styles.simulateButtonText}>Simulate</Text>
             </TouchableOpacity>
           </View>
-          {simResult && <Text className="text-accent font-mono mt-1">{simResult}</Text>}
+          {simResult && <Text style={styles.simResultText}>{simResult}</Text>}
         </View>
       </ScrollView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  flex1BgBackground: {
+    flex: 1,
+    backgroundColor: '#F5F7FA',
+  },
+  headerContainer: {
+    backgroundColor: '#0A2540',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontFamily: 'SpaceMono',
+  },
+  headerSubtitle: {
+    color: '#1DE9B6',
+    fontSize: 24,
+    fontWeight: 'bold',
+    fontFamily: 'SpaceMono',
+  },
+  loadButton: {
+    backgroundColor: '#1DE9B6',
+    borderRadius: 24,
+    padding: 12,
+  },
+  loadButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  flex1: {
+    flex: 1,
+  },
+  pairRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  pairButton: {
+    flex: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    marginHorizontal: 4,
+    alignItems: 'center',
+  },
+  pairButtonActive: {
+    backgroundColor: '#1DE9B6',
+  },
+  pairButtonText: {
+    fontFamily: 'SpaceMono',
+    fontSize: 12,
+    color: '#0A2540',
+  },
+  pairButtonTextActive: {
+    fontWeight: 'bold',
+    color: '#0A2540',
+  },
+  predictionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  predictionTitle: {
+    color: '#0A2540',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontFamily: 'SpaceMono',
+  },
+  errorText: {
+    color: '#FF5252',
+    fontFamily: 'SpaceMono',
+  },
+  predictionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  predictionValue: {
+    color: '#0A2540',
+    fontSize: 22,
+    fontWeight: 'bold',
+    fontFamily: 'SpaceMono',
+  },
+  confidenceText: {
+    color: '#0A2540',
+    fontFamily: 'SpaceMono',
+    marginBottom: 4,
+  },
+  explanationText: {
+    color: '#888',
+    fontFamily: 'SpaceMono',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  suggestionText: {
+    color: '#1DE9B6',
+    fontFamily: 'SpaceMono',
+    textAlign: 'center',
+  },
+  trendCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  trendTitle: {
+    color: '#0A2540',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontFamily: 'SpaceMono',
+  },
+  noDataText: {
+    color: '#888',
+    fontFamily: 'SpaceMono',
+  },
+  simulationCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  simulationTitle: {
+    color: '#0A2540',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontFamily: 'SpaceMono',
+  },
+  simulationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#F5F7FA',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 16,
+    color: '#0A2540',
+    fontFamily: 'SpaceMono',
+    marginRight: 8,
+  },
+  simulateButton: {
+    backgroundColor: '#1DE9B6',
+    borderRadius: 16,
+    padding: 10,
+  },
+  simulateButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  simResultText: {
+    color: '#1DE9B6',
+    fontFamily: 'SpaceMono',
+    marginTop: 8,
+  },
+});
