@@ -42,19 +42,19 @@ const REGIONS = [
 
 const TIPS = [
   {
-    icon: 'trending-up',
+    icon: 'chart-line',
     color: '#4CAF50',
     title: 'Invest Consistently',
     desc: 'Regular investments, even small, can grow significantly over time.'
   },
   {
-    icon: 'pie-chart',
+    icon: 'chart-pie',
     color: '#2196F3',
     title: 'Diversify Portfolio',
     desc: 'Don’t put all your eggs in one basket. Spread your investments.'
   },
   {
-    icon: 'alarm',
+    icon: 'bell',
     color: '#FF9800',
     title: 'Set Reminders',
     desc: 'Review your investments and budget regularly for best results.'

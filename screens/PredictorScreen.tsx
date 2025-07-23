@@ -98,7 +98,7 @@ export default function PredictorScreen() {
   let trendGradient: [string, string] = ['#888', '#666'];
   
   if (prediction.includes('Uptrend')) { 
-    trendIcon = 'trending-up'; 
+    trendIcon = 'chart-line'; 
     trendColor = '#43e97b'; 
     trendGradient = ['#43e97b', '#38f9d7'];
   }
