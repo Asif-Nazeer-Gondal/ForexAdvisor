@@ -1,6 +1,7 @@
 // services/forexService.ts
 
 import Constants from 'expo-constants';
+import { createClient } from '@supabase/supabase-js';
 
 const extra = (Constants.manifest?.extra || Constants.expoConfig?.extra || {});
 
@@ -217,3 +218,11 @@ export async function fetchForexNews(currencyPair = '', region = '') {
     return [];
   }
 }
+
+// Create a new file services/supabaseClient.ts
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = 'https://YOUR_SUPABASE_URL.supabase.co'; // TODO: Replace with your Supabase URL
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // TODO: Replace with your Supabase anon/public key
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

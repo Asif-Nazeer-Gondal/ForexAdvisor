@@ -69,6 +69,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="dashboard/InvestmentDashboard"
+        options={{
+          title: 'Invest',
+          tabBarIcon: ({ color }: { color: string }) => (
+            <IconSymbol size={28} name="dollar-sign" color={color} />
+          ),
+        }}
+      />
 
     </Tabs>
   );
