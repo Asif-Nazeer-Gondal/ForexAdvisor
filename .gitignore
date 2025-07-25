@@ -46,3 +46,6 @@ app-example
 .env
 backend/.env
 Frontend/.env
+
+# Ignore the missing module
+hooks/useInvestments
