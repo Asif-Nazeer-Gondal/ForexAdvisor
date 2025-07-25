@@ -41,3 +41,8 @@ app-example
 .env
 
 .env
+
+# Ignore all .env files
+.env
+backend/.env
+Frontend/.env
