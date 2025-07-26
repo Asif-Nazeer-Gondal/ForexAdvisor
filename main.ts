@@ -1,8 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-serve(async (req) => {
+serve(async (req: Request) => {
   const url = new URL(req.url)
-  
   if (url.pathname === '/') {
     return new Response(
       JSON.stringify({ 
