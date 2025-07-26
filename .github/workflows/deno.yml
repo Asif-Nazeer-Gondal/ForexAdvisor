@@ -1,0 +1,7 @@
+﻿name: Deno CI/CD
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+# ... [paste the entire workflow here] ...
