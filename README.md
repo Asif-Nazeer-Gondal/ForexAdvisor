@@ -33,3 +33,5 @@ git clone https://github.com/Asif-Nazeer-Gondal/ForexAdvisor.git
 cd ForexAdvisor
 npm install
 npx expo start
+
+# Testing Deno CI/CD
