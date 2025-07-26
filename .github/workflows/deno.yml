@@ -1,4 +1,4 @@
-name: Deno CI/CD
+﻿name: Deno CI/CD
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  deployments: write
 
 jobs:
   test:
@@ -20,10 +19,3 @@ jobs:
           deno-version: "1.x"
       - run: deno lint
       - run: deno test -A
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == "refs/heads/main"
-    steps:
-      - run: echo "Deno Deploy will auto-deploy if connected"
